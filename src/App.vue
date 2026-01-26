@@ -12,7 +12,7 @@
     <ContextMenu ref="contextMenuRef" />
   </div>
 </template>
-
+<!--测试-->
 <script>
 import TheHeader from '@/layout/Header/index.vue'
 import TheFooter from '@/layout/Footer/index.vue'
@@ -80,14 +80,14 @@ export default {
      */
     initCursorEffect() {
       const container = document.querySelector('.cursor-container')
-      
+
       document.addEventListener('click', (e) => {
         const cursor = document.createElement('div')
         cursor.className = 'cursor-fx'
         cursor.style.left = `${e.clientX}px`
         cursor.style.top = `${e.clientY}px`
         container.appendChild(cursor)
-        
+
         cursor.addEventListener('animationend', () => {
           cursor.remove()
         })
@@ -130,4 +130,4 @@ export default {
   font-family: "font";
   box-sizing: border-box;
 }
-</style> 
+</style>
