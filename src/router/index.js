@@ -106,11 +106,11 @@ const routes = [
                 }
               },
               {
-                path: '/resources',
-                name: 'Resources',
-                component: () => import('@/views/resources/index.vue'),
+                path: '/infrastructure',
+                name: 'Infrastructure',
+                component: () => import('@/views/infrastructure/index.vue'),
                 meta: {
-                  title: '资源',
+                  title: '基础设施 - 拾壹博客',
                   icon: 'fas fa-cloud-download-alt'
 
                 }

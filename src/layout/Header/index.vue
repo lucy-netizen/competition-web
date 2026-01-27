@@ -164,8 +164,8 @@ export default {
           colorClass: 'hot-link'
         },
         { 
-          name: '资源', 
-          path: '/resources', 
+          name: '基础设施',
+          path: '/infrastructure',
           icon: 'fas fa-cloud-download-alt',
           colorClass: 'resource-link'
         },
