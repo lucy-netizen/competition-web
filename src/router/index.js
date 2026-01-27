@@ -195,6 +195,12 @@ const routes = [
                 }
               },
               {
+            path: '/data/publish',
+            name: 'DataPublish',
+            component: () => import('@/views/data/Publish.vue'),
+            meta: { title: '科学数据发布' }
+              },
+              {
                 path: '/notifications',
                 name: 'Notifications',
                 component: () => import('@/views/notifications/index.vue'),
