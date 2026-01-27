@@ -159,7 +159,7 @@ export default {
         },
         { 
           name: '数据检索工具',
-          path: '/utility',
+          path: '/utility-1',
           icon: 'fas fa-fire',
           colorClass: 'hot-link'
         },

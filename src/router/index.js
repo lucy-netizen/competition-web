@@ -96,9 +96,9 @@ const routes = [
                 }
               },
               {
-                path: '/utility',
-                name: 'utility',
-                component: () => import(/* webpackPrefetch: true */ '@/views/utility/index.vue'),
+                path: '/utility-1',
+                name: 'Utility',
+                component: () => import(/* webpackPrefetch: true */ '@/views/utility-1/index.vue'),
                 meta: { 
                   transition: 'fade',
                   title: '数据检索工具 - 拾壹博客',

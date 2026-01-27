@@ -73,9 +73,9 @@ const toolList = ref([
 
 // 查看详情：路由跳转（复用配置的/utility路由，若后续加详情页可直接修改path）
 const goToDetail = (tool) => {
-  // 目前先跳转到自身页面+提示，后续可修改为path: '/utility/detail/' + tool.id
+  // 目前先跳转到自身页面+提示，后续可修改为path: '/utility-1/detail/' + tool.id
   router.push({
-    path: '/utility',
+    path: '/utility-1',
     query: { toolId: tool.id, toolName: tool.name } // 携带工具参数，方便后续扩展详情页
   })
   // 模拟详情页跳转提示
