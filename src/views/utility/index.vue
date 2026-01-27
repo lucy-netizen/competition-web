@@ -1,98 +1,3 @@
-<script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-// 若项目有Element Plus/全局消息提示可直接用，无则用原生alert兼容
-// 推荐项目有UI库的话，替换为ElMessage/this.$message，体验更好
-
-const router = useRouter()
-
-// 页面核心数据：月球与行星 + 6个数据挖掘工具（可直接修改工具名称/描述/图片）
-const pageData = ref({
-  title: '月球与行星',
-  englishTitle: 'Moon & Planets',
-  description: '整合行星探测数据处理工具，提供图像融合、光谱反演、数据可视化等专业分析能力，助力行星科学研究。'
-})
-
-// 数据检索工具列表（可根据实际需求增删/修改）
-const toolList = ref([
-  {
-    id: 1,
-    name: '行星探测图像超分和融合',
-    version: 'V1.0',
-    releaseDate: '2025/07/26',
-    imageUrl: '/assets/images/tool1.jpg', // 图片建议放在src/assets/images下，直接用此路径
-    intro: '对行星遥感图像进行超分辨率增强与多源数据融合，提升图像细节表现力。',
-    zipName: '行星图像超分融合工具_V1.0.zip' // 模拟下载的压缩包名称
-  },
-  {
-    id: 2,
-    name: '基于可见近红外光谱的月火物质成分反演',
-    version: 'V1.0',
-    releaseDate: '2025/07/26',
-    imageUrl: '/assets/images/tool2.jpg',
-    intro: '利用光谱数据反演行星表面物质成分，支持月球与火星多区域数据解析。',
-    zipName: '月火物质成分反演工具_V1.0.zip'
-  },
-  {
-    id: 3,
-    name: '月火次表层结构微波雷达分析',
-    version: 'V1.0',
-    releaseDate: '2025/07/26',
-    imageUrl: '/assets/images/tool3.jpg',
-    intro: '通过微波与雷达数据解析行星次表层结构，实现地下层理与物质分布探测。',
-    zipName: '月火次表层分析工具_V1.0.zip'
-  },
-  {
-    id: 4,
-    name: '行星数据三维可视化工具',
-    version: 'V1.0',
-    releaseDate: '2025/07/26',
-    imageUrl: '/assets/images/tool4.jpg',
-    intro: '将行星多源数据转换为三维模型，支持交互式视角查看与参数调整。',
-    zipName: '行星数据三维可视化工具_V1.0.zip'
-  },
-  {
-    id: 5,
-    name: '火星风场流线动态可视化',
-    version: 'V1.0',
-    releaseDate: '2025/07/26',
-    imageUrl: '/assets/images/tool5.jpg',
-    intro: '可视化火星大气风场分布，支持时间序列动态演示与风速参数标注。',
-    zipName: '火星风场可视化工具_V1.0.zip'
-  },
-  {
-    id: 6,
-    name: '月火形貌特征自动识别与定年',
-    version: 'V1.0',
-    releaseDate: '2025/07/26',
-    imageUrl: '/assets/images/tool6.jpg',
-    intro: '自动识别行星表面撞击坑、山脊等形貌特征，并完成地质年代定年分析。',
-    zipName: '月火形貌识别定年工具_V1.0.zip'
-  }
-])
-
-// 查看详情：路由跳转（复用配置的/utility路由，若后续加详情页可直接修改path）
-const goToDetail = (tool) => {
-  // 目前先跳转到自身页面+提示，后续可修改为path: '/utility-1/detail/' + tool.id
-  router.push({
-    path: '/utility-1',
-    query: { toolId: tool.id, toolName: tool.name } // 携带工具参数，方便后续扩展详情页
-  })
-  // 模拟详情页跳转提示
-  alert(`已进入【${tool.name}】详情页，后续可在此开发工具详情内容！`)
-}
-
-// 下载按钮：装饰性+模拟压缩包下载提示（无实际接口，仅前端展示效果）
-const mockDownload = (tool, e) => {
-  e.stopPropagation() // 阻止冒泡，避免触发卡片的「查看详情」
-  // 模拟下载提示，还原压缩包下载的真实体验
-  const tip = `✅ 【${tool.zipName}】\n压缩包开始下载！\n文件大小：约286MB\n预计下载时间：10-30秒`
-  alert(tip)
-  // 若项目有Element Plus，替换为以下代码（注释掉上面的alert即可）
-  // ElMessage.success(`【${tool.zipName}】压缩包已开始下载，请注意查收！`)
-}
-</script>
-
 <template>
   <div class="utility-page">
     <!-- 页面标题区域：月球与行星 -->
@@ -139,8 +44,98 @@ const mockDownload = (tool, e) => {
   </div>
 </template>
 
+<script>
+// 改为Vue2标准语法：export default + data/methods，移除Vue3的<script setup>和useRouter
+export default {
+  name: 'Utility',
+  data() {
+    return {
+      // 页面核心数据：月球与行星 + 6个数据挖掘工具
+      pageData: {
+        title: '月球与行星',
+        englishTitle: 'Moon & Planets',
+        description: '整合行星探测数据处理工具，提供图像融合、光谱反演、数据可视化等专业分析能力，助力行星科学研究。'
+      },
+      // 数据检索工具列表
+      toolList: [
+        {
+          id: 1,
+          name: '行星探测图像超分和融合',
+          version: 'V1.0',
+          releaseDate: '2025/07/26',
+          imageUrl: '/assets/images/tool1.jpg',
+          intro: '对行星遥感图像进行超分辨率增强与多源数据融合，提升图像细节表现力。',
+          zipName: '行星图像超分融合工具_V1.0.zip'
+        },
+        {
+          id: 2,
+          name: '基于可见近红外光谱的月火物质成分反演',
+          version: 'V1.0',
+          releaseDate: '2025/07/26',
+          imageUrl: '/assets/images/tool2.jpg',
+          intro: '利用光谱数据反演行星表面物质成分，支持月球与火星多区域数据解析。',
+          zipName: '月火物质成分反演工具_V1.0.zip'
+        },
+        {
+          id: 3,
+          name: '月火次表层结构微波雷达分析',
+          version: 'V1.0',
+          releaseDate: '2025/07/26',
+          imageUrl: '/assets/images/tool3.jpg',
+          intro: '通过微波与雷达数据解析行星次表层结构，实现地下层理与物质分布探测。',
+          zipName: '月火次表层分析工具_V1.0.zip'
+        },
+        {
+          id: 4,
+          name: '行星数据三维可视化工具',
+          version: 'V1.0',
+          releaseDate: '2025/07/26',
+          imageUrl: '/assets/images/tool4.jpg',
+          intro: '将行星多源数据转换为三维模型，支持交互式视角查看与参数调整。',
+          zipName: '行星数据三维可视化工具_V1.0.zip'
+        },
+        {
+          id: 5,
+          name: '火星风场流线动态可视化',
+          version: 'V1.0',
+          releaseDate: '2025/07/26',
+          imageUrl: '/assets/images/tool5.jpg',
+          intro: '可视化火星大气风场分布，支持时间序列动态演示与风速参数标注。',
+          zipName: '火星风场可视化工具_V1.0.zip'
+        },
+        {
+          id: 6,
+          name: '月火形貌特征自动识别与定年',
+          version: 'V1.0',
+          releaseDate: '2025/07/26',
+          imageUrl: '/assets/images/tool6.jpg',
+          intro: '自动识别行星表面撞击坑、山脊等形貌特征，并完成地质年代定年分析。',
+          zipName: '月火形貌识别定年工具_V1.0.zip'
+        }
+      ]
+    }
+  },
+  methods: {
+    // 查看详情：修复原错误路径/utility-1，改为当前/utility（Vue2用this.$router）
+    goToDetail(tool) {
+      this.$router.push({
+        path: '/utility',
+        query: { toolId: tool.id, toolName: tool.name }
+      })
+      alert(`已进入【${tool.name}】详情页，后续可在此开发工具详情内容！`)
+    },
+    // 下载按钮：装饰性+模拟压缩包下载提示（保留事件防冒泡）
+    mockDownload(tool, e) {
+      e.stopPropagation()
+      const tip = `✅ 【${tool.zipName}】\n压缩包开始下载！\n文件大小：约286MB\n预计下载时间：10-30秒`
+      alert(tip)
+    }
+  }
+}
+</script>
+
 <style scoped lang="css">
-/* 全局页面样式：适配项目整体布局，无外依赖 */
+/* 所有样式保持不变，直接复用 */
 .utility-page {
   max-width: 1400px;
   margin: 0 auto;
@@ -150,7 +145,6 @@ const mockDownload = (tool, e) => {
   background-color: #f8f9fa;
 }
 
-/* 页面标题样式 */
 .page-header {
   text-align: center;
   margin-bottom: 40px;
@@ -186,14 +180,12 @@ const mockDownload = (tool, e) => {
   line-height: 1.8;
 }
 
-/* 工具卡片容器：自适应网格布局，适配电脑/平板 */
 .tool-card-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 25px;
 }
 
-/* 工具卡片样式：悬浮抬升 */
 .tool-card {
   background: #fff;
   border-radius: 16px;
@@ -207,7 +199,6 @@ const mockDownload = (tool, e) => {
   box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
 }
 
-/* 工具图片：悬停放大核心效果，固定比例避免变形 */
 .tool-img-box {
   width: 100%;
   height: 180px;
@@ -221,10 +212,9 @@ const mockDownload = (tool, e) => {
   transition: transform 0.7s ease-in-out;
 }
 .tool-card:hover .tool-img {
-  transform: scale(1.1); /* 鼠标悬停图片放大1.1倍，效果自然不夸张 */
+  transform: scale(1.1);
 }
 
-/* 工具信息区域：内边距适配，文字排版舒适 */
 .tool-info-box {
   padding: 20px;
 }
@@ -258,7 +248,6 @@ const mockDownload = (tool, e) => {
   overflow: hidden;
 }
 
-/* 按钮组：查看详情+下载，样式区分明显 */
 .tool-btn-group {
   display: flex;
   gap: 10px;
@@ -289,7 +278,6 @@ const mockDownload = (tool, e) => {
   background-color: #319795;
 }
 
-/* 响应式适配：手机端单列显示，适配各种设备 */
 @media (max-width: 768px) {
   .main-title {
     font-size: 2.2rem;
