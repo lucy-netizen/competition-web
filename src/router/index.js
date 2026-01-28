@@ -31,19 +31,19 @@ const routes = [
                     transition: 'fade',
                     icon: 'fas fa-home',
                     loading: true
-                }
-            },
-            {
+                 }
+              },
+              {
                 path: '/archive',
                 name: 'Archive',
                 component: Archive,
-                meta: {
-                    transition: 'fade',
-                    title: '归档 - 拾壹博客',
-                    icon: 'fas fa-archive'
+                meta: { 
+                  transition: 'fade',
+                  title: '归档 - 拾壹博客',
+                  icon: 'fas fa-archive'
                 }
-            },
-            {
+              },
+              {
                 path: '/categories',
                 name: 'Categories',
                 component: Categories,
@@ -51,9 +51,9 @@ const routes = [
                     transition: 'fade',
                     title: "分类 - 拾壹博客",
                     icon: 'fas fa-folder'
-                }
-            },
-            {
+                 }
+              },
+              {
                 path: '/tags',
                 name: 'Tags',
                 component: Tags,
@@ -62,17 +62,17 @@ const routes = [
                     title: '标签 - 拾壹博客',
                     icon: 'fas fa-tags'
                 }
-            },
-            {
+              },
+              {
                 path: '/moments',
                 name: 'Moments',
                 component: () => import('@/views/moments/index.vue'),
                 meta: {
-                    title: '说说 - 拾壹博客',
-                    icon: 'fas fa-comment-dots'
+                  title: '说说 - 拾壹博客',
+                  icon: 'fas fa-comment-dots'
                 }
-            },
-            {
+              },
+              {
                 path: '/photos',
                 name: 'Photos',
                 component: Photos,
@@ -81,8 +81,8 @@ const routes = [
                     title: '相册 - 拾壹博客',
                     icon: 'fas fa-images'
                 }
-            },
-            {
+              },
+              {
                 path: '/photos/:id',
                 name: 'PhotoDetail',
                 component: () => import('@/views/photos/detail.vue'),
@@ -92,24 +92,24 @@ const routes = [
                     icon: 'fas fa-images',
                     hidden: true
                 }
-            },
-            {
-                path: '/hotSearch',
-                name: 'HotSearch',
-                component: () => import(/* webpackPrefetch: true */ '@/views/hotSearch/index.vue'),
+              },
+              {
+                path: '/utility',
+                name: 'Utility',
+                component: () => import(/* webpackPrefetch: true */ '@/views/utility/index.vue'),
                 meta: {
-                    transition: 'fade',
-                    title: '热搜 - 拾壹博客',
-                    icon: 'fas fa-fire'
+                  transition: 'fade',
+                  title: '数据检索工具 - 拾壹博客',
+                  icon: 'fas fa-fire'
                 }
-            },
-            {
-                path: '/resources',
-                name: 'Resources',
-                component: () => import('@/views/resources/index.vue'),
+              },
+              {
+                path: '/infrastructure',
+                name: 'Infrastructure',
+                component: () => import('@/views/infrastructure/index.vue'),
                 meta: {
-                    title: '资源',
-                    icon: 'fas fa-cloud-download-alt'
+                  title: '基础设施 - 拾壹博客',
+                  icon: 'fas fa-cloud-download-alt'
 
                 }
             },
@@ -126,23 +126,23 @@ const routes = [
                 path: '/messages',
                 name: 'Messages',
                 component: Messages,
-                meta: {
-                    transition: 'fade',
-                    title: '留言板 - 拾壹博客',
-                    icon: 'fas fa-comments'
+                meta: { 
+                  transition: 'fade',
+                  title: '留言板 - 拾壹博客',
+                  icon: 'fas fa-comments'
                 }
-            },
-            {
+              },
+              {
                 path: '/friends',
                 name: 'Friends',
                 component: () => import(/* webpackPrefetch: true */ '@/views/friends/index.vue'),
-                meta: {
-                    transition: 'fade',
-                    title: '友情链接 - 拾壹博客',
-                    icon: 'fas fa-user-friends'
+                meta: { 
+                  transition: 'fade',
+                  title: '友情链接 - 拾壹博客',
+                  icon: 'fas fa-user-friends'
                 }
-            },
-            {
+              },
+              {
                 path: '/about',
                 name: 'About',
                 component: About,
