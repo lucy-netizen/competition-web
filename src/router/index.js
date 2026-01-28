@@ -13,9 +13,7 @@ import Photos from '@/views/photos/index.vue'
 import store from '@/store';
 
 Vue.use(VueRouter)
-
 const routes = [
-
     {
         path: "/",
         component: Layout,
@@ -99,7 +97,7 @@ const routes = [
                 path: '/utility',
                 name: 'Utility',
                 component: () => import(/* webpackPrefetch: true */ '@/views/utility/index.vue'),
-                meta: { 
+                meta: {
                   transition: 'fade',
                   title: '数据检索工具 - 拾壹博客',
                   icon: 'fas fa-fire'
@@ -114,8 +112,17 @@ const routes = [
                   icon: 'fas fa-cloud-download-alt'
 
                 }
-              },
-              {
+            },
+            {
+                path: '/scientific-data',
+                name: 'ScientificData',
+                component: () => import('@/views/scientific-data/index.vue'),
+                meta: {
+                    title: '科学数据 ',
+                    icon: 'fas fa-database'
+                }
+            },
+            {
                 path: '/messages',
                 name: 'Messages',
                 component: Messages,
