@@ -96,12 +96,12 @@ const routes = [
                 }
               },
               {
-                path: '/hotSearch',
-                name: 'HotSearch',
-                component: () => import(/* webpackPrefetch: true */ '@/views/hotSearch/index.vue'),
+                path: '/utility',
+                name: 'Utility',
+                component: () => import(/* webpackPrefetch: true */ '@/views/utility/index.vue'),
                 meta: { 
                   transition: 'fade',
-                  title: '热搜 - 拾壹博客',
+                  title: '数据检索工具 - 拾壹博客',
                   icon: 'fas fa-fire'
                 }
               },
