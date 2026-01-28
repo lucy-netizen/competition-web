@@ -394,7 +394,7 @@ export default {
       this.loading = true;
       try {
         await this.$store.dispatch("loginAction", this.loginForm);
-        // this.$refs.sliderVerify?.verifySuccessEvent();
+        this.$refs.sliderVerify?.verifySuccessEvent();
         this.$message.success("登录成功");
         this.handleClose();
       } catch (error) {
@@ -440,14 +440,13 @@ export default {
     async handleLogin() {
       this.$refs["ruleFrom"].validate(async (valid) => {
         if (valid) {
-          this.login();
-          // getCaptchaSwitchApi().then((res) => {
-          //   if (!res.data || res.data.configValue === "Y") {
-          //     this.isShowSliderVerify = true;
-          //   } else {
-          //     this.login();
-          //   }
-          // });
+          getCaptchaSwitchApi().then((res) => {
+            if (!res.data || res.data.configValue === "Y") {
+              this.isShowSliderVerify = true;
+            } else {
+              this.login();
+            }
+          });
         } else {
           return false;
         }
