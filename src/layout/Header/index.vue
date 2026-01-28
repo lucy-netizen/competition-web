@@ -169,12 +169,6 @@ export default {
           icon: 'fas fa-cloud-download-alt',
           colorClass: 'resource-link'
         },
-        {
-          name: '科学数据',
-          path: '/scientific-data',
-          icon: 'fas fa-database',
-          colorClass: 'scientific-link'
-        },
         { 
           name: '相册', 
           path: '/photos', 

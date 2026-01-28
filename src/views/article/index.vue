@@ -1,692 +1,2097 @@
 <template>
-  <div class="planetary-detail-page" v-loading="loading">
-    <!-- 1. 顶部面包屑：修正分类显示逻辑 -->
-    <div class="breadcrumb-container">
-      <div class="status-group">
-        <span class="status-badge">公开数据集</span>
-        <span class="divider">/</span>
-        <span class="category-name">
-          {{ article.category && article.category.name ? article.category.name : '行星科学数据' }}
-        </span>
+  <div class="article-page" v-loading="loading">
+
+    <!-- 添加固定操作栏 -->
+    <div class="floating-action-bar" :style="{ left: actionBarLeft }">
+      <el-tooltip class="item" effect="dark" content="点赞" placement="top-start">
+        <div class="action-item" @click="toggleLike">
+          <el-badge :value="article.likeNum || 0" class="item">
+            <div class="action-button">
+              <i class="fas fa-thumbs-up" :class="{ active: article.isLike }"></i>
+            </div>
+          </el-badge>
+        </div>
+      </el-tooltip>
+      <el-tooltip class="item" effect="dark" content="收藏" placement="top-start">
+        <div class="action-item" @click="toggleFavorite">
+          <el-badge :value="article.favoriteNum || 0" class="item">
+            <div class="action-button">
+              <i class="fas fa-star" :class="{ active: article.isFavorite }"></i>
+            </div>
+          </el-badge>
+        </div>
+      </el-tooltip>
+      <el-tooltip class="item" effect="dark" content="沉浸式浏览" placement="top-start">
+        <div class="action-item" @click="toggleSidebar">
+          <div class="action-button">
+            <i class="fas fa-expand"></i>
+          </div>
+        </div>
+      </el-tooltip>
+      <div class="action-item reward-item">
+        <div class="action-button">
+          <i class="fas fa-yen-sign"></i>
+        </div>
+        <div class="reward-popup">
+          <div class="reward-content">
+            <img v-lazy="$store.state.webSiteInfo.weixinPay" alt="微信打赏" class="reward-qr">
+            <img v-lazy="$store.state.webSiteInfo.aliPay" alt="支付宝打赏" class="reward-qr">
+          </div>
+          <div class="reward-text">扫一扫，请我喝杯咖啡</div>
+        </div>
       </div>
-      <div class="meta-info-group">
-        <span class="pub-date"><i class="far fa-calendar-check"></i> 发布于 {{ article.createTime || '2026-01-27' }}</span>
-        <span class="license-info"><i class="fab fa-creative-commons"></i> CC BY-NC-SA 4.0</span>
-      </div>
+      <el-tooltip class="item" effect="dark" content="评论" placement="top-start">
+        <div class="action-item" @click="scrollToComments">
+          <el-badge :value="article.commentNum || 0" class="item">
+            <div class="action-button">
+              <i class="fas fa-comment"></i>
+            </div>
+          </el-badge>
+        </div>
+      </el-tooltip>
     </div>
 
-    <div class="content-layout">
-      <!-- ================= 左侧主内容区 (学术核心) ================= -->
-      <main class="main-content">
-        <!-- 标题头：100% 动态 -->
+    <div class="content-layout" id="articleBox" :class="{ center: !showSidebar }">
+      <main class="article-main">
+        <!-- 文章头部 -->
         <header class="article-header">
-          <h1 class="data-title">
-            {{ article.title }}
-            <el-tooltip content="跳转至原始资源" placement="top">
-              <i class="fas fa-external-link-alt" @click="openExternal(article.originalUrl)"></i>
-            </el-tooltip>
-          </h1>
+          <div class="article-title">{{ article.title }}</div>
 
-          <!-- 唯一标识 (CSTR/DOI) -->
-          <div class="id-panel">
-            <div class="id-item">
-              <span class="label">CSTR</span>
-              <span class="val">{{ article.cstr || '11000.CSTR.PDS.LUNAR.CE5' }}</span>
-              <i class="far fa-copy" @click="copyText(article.cstr)" title="复制 CSTR"></i>
+          <!-- 作者信息和元数据 -->
+          <div class="article-info">
+            <div class="author-info">
+              <img v-lazy="article.avatar" alt="作者头像" class="author-avatar">
+              <div class="author-meta">
+                <span class="author-name">{{ article.nickname }}</span>
+                <div class="post-meta">
+                  <time class="publish-time">
+                    <i class="far fa-calendar-alt"></i>
+                    {{ article.createTime }}
+                  </time>
+                  <span class="meta-divider">·</span>
+                  <span class="category">
+                    <i class="fas fa-folder"></i>
+                    {{ article.category.name }}
+                  </span>
+                </div>
+              </div>
             </div>
-            <div class="id-item">
-              <span class="label">DOI</span>
-              <span class="val">{{ article.doi || '10.57760/sciencedb.planetary.001' }}</span>
-              <i class="far fa-copy" @click="copyText(article.doi)" title="复制 DOI"></i>
-            </div>
-          </div>
 
-          <!-- 作者列表：动态解析字符串 -->
-          <div class="author-bar">
-            <div class="author-icon"><i class="fas fa-user-graduate"></i></div>
-            <div class="author-list">
-              <span v-for="(name, index) in authors" :key="index" class="author-name">
-                {{ name }}{{ index < authors.length - 1 ? '；' : '' }}
-              </span>
+            <div class="article-stats">
+              <div class="stat-item">
+                <i class="far fa-eye"></i>
+                <span>{{ article.quantity }} 阅读</span>
+              </div>
+              <div class="stat-item">
+                <i class="far fa-clock"></i>
+                <span>{{ readTime }} 分钟</span>
+              </div>
+              <div class="stat-item">
+                <i class="far fa-comment"></i>
+                <span>{{ article.commentNum || 0 }} 评论</span>
+              </div>
             </div>
           </div>
         </header>
 
-        <!-- 1. 摘要描述 (核心项) -->
-        <section id="description" class="section-card">
-          <h2 class="section-title">数据摘要 / Description</h2>
-          <div class="description-content">
-            <!-- 优先显示后端数据，若没有则显示行星背景占位 -->
-            <div v-if="article.description" class="rich-text" v-html="article.description"></div>
-            <div v-else class="placeholder-text">
-              本数据集记录了行星探测任务中的关键科学观测数据。包含多光谱影像、雷达回波、以及化学元素反演结果。
-              数据经过初级校正和精细化处理，可直接用于行星地质、大气环境及演化历史的研究。
+        <!-- AI简短介绍 -->
+        <div v-if="article.aiDescribe" class="ai-description">
+          <div class="ai-header" @click="isAiDescriptionExpanded = !isAiDescriptionExpanded">
+            <i class="fas fa-robot"></i>
+            <span>AI 摘要</span>
+            <i class="fas" :class="isAiDescriptionExpanded ? 'fa-chevron-up' : 'fa-chevron-down'" style="margin-left:auto;"></i>
+          </div>
+          <transition
+                name="expand"
+                @enter="startTransition"
+                @leave="endTransition"
+                mode="out-in"
+          >
+            <div class="ai-content" v-show="isAiDescriptionExpanded">
+              <span class="typing-text" ref="typingText"></span>
+              <div class="ai-description-text">
+                摘要由平台通过智能技术生成
+              </div>
+            </div>
+          </transition>
+        </div>
+
+        <!-- 文章内容 -->
+        <article class="article-content">
+          <!-- 免费内容 -->
+          <div v-if="article.readType === 1" v-html="article.content"></div>
+          
+          <!-- 会员内容 -->
+          <div v-else-if="article.readType === 2" class="locked-content member">
+            <div class="preview-content" v-html="getPreviewContent(article.content)"></div>
+            <div class="content-locker">
+              <div class="locker-icon">
+                <i class="fas fa-crown"></i>
+              </div>
+              <h3>会员专享内容</h3>
+              <p>成为会员即可阅读全文</p>
+              <el-button type="primary" @click="handleUpgrade">立即开通会员</el-button>
             </div>
           </div>
-        </section>
-
-        <!-- 2. 关键词与标签 (动态) -->
-        <section class="section-card">
-          <div class="meta-grid">
-            <div class="meta-cell">
-              <span class="label">关键词 (Keywords)：</span>
-              <div class="tag-wrap">
-                <span v-for="tag in keywords" :key="tag" class="science-tag">{{ tag }}</span>
+          
+          <!-- 付费内容 -->
+          <div v-else-if="article.readType === 3" class="locked-content paid">
+            <div class="preview-content" v-html="getPreviewContent(article.content)"></div>
+            <div class="content-locker">
+              <div class="locker-icon">
+                <i class="fas fa-lock"></i>
               </div>
-            </div>
-            <div class="meta-cell">
-              <span class="label">所属分类 (Subject)：</span>
-              <span class="subject-val">{{ article.category ? article.category.name : '通用行星科学' }}</span>
+              <h3>付费阅读</h3>
+              <p>支付 1 元即可阅读全文</p>
+              <el-button type="primary" @click="handlePurchase">立即购买</el-button>
             </div>
           </div>
-        </section>
+        </article>
 
-        <!-- 3. 数据实体下载 (100% 交互) -->
-        <section id="download" class="section-card">
-          <h2 class="section-title">数据实体与下载 / Download</h2>
-          <div class="file-table-container">
-            <div class="table-header">
-              <div class="search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" v-model="fileQuery" placeholder="检索文件名...">
-              </div>
-              <div class="header-actions">
-                <i class="fas fa-file-export" title="导出元数据"></i>
-                <i class="fas fa-sync-alt" @click="fetchDetail" title="刷新列表"></i>
-              </div>
+        <!-- 文章底部 -->
+        <footer class="article-footer">
+          <!-- 版权声明提示 -->
+          <div class="copyright-notice">
+            <div class="notice-header">
+              <i class="fas fa-copyright"></i>
+              <span>版权声明</span>
             </div>
-            <div class="file-list">
-              <div class="file-row">
-                <div class="file-type-icon"><i class="fas fa-file-archive"></i></div>
-                <div class="file-info">
-                  <div class="filename">PDS_DATA_EXPLORATION_V1.zip</div>
-                  <div class="file-meta">
-                    <span class="size">35.93 KB</span>
-                    <span class="dot">·</span>
-                    <span class="md5">MD5: f9e8d...</span>
-                  </div>
-                </div>
-                <div class="file-actions">
-                  <el-button type="primary" size="small" icon="el-icon-download" @click="handleDownload">
-                    下载数据包
-                  </el-button>
-                </div>
+            <div class="notice-content">
+              <div v-if="article.isOriginal" class="notice-item">
+                <i class="fas fa-check-circle"></i>
+                <span>本文由 {{ article.nickname }} 原创发布</span>
+              </div>
+              <div v-else class="notice-item">
+                <i class="fas fa-share-alt"></i>
+                <span>本文转载自：<a :href="article.originalUrl" target="_blank" rel="noopener noreferrer">{{ article.originalUrl || '未知来源' }}</a></span>
+              </div>
+              <div class="notice-item">
+                <i class="fas fa-calendar-alt"></i>
+                <span>发布时间：{{ article.createTime }}</span>
+              </div>
+              <div class="notice-item">
+                <i class="fab fa-creative-commons-sa"></i>
+                <span>
+                  版权协议：
+                  <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="noopener noreferrer">
+                    CC BY-NC-SA 4.0
+                  </a>
+                </span>
+              </div>
+              <div class="notice-item notice-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>未经许可，禁止转载、摘编、复制或建立镜像。欢迎转发分享！</span>
               </div>
             </div>
           </div>
-        </section>
 
-        <!-- 4. 动态引用生成 (逻辑增强) -->
-        <section id="cite" class="section-card">
-          <h2 class="section-title">引用本数据 / Cite This Dataset</h2>
-          <div class="citation-container">
-            <div class="citation-header">
-              <el-radio-group v-model="citeType" size="mini">
-                <el-radio-button label="GB/T 7714"></el-radio-button>
-                <el-radio-button label="APA"></el-radio-button>
-                <el-radio-button label="BibTeX"></el-radio-button>
-              </el-radio-group>
+          <!-- 标签部分保持不变 -->
+          <div class="tags-section">
+            <i class="fas fa-tags"></i>
+            <div class="tags-list">
+              <router-link v-for="tag in article.tags" :key="tag.id" :to="`/tags?tagId=${tag.id}&tagName=${tag.name}`"
+                class="tag-item">
+                {{ tag.name }}
+              </router-link>
             </div>
-            <div class="citation-body">
-              <p class="cite-text">{{ dynamicCitation }}</p>
-              <p class="cite-text">{{ dynamicCitation }}</p>
-              <button class="copy-btn" @click="copyText(dynamicCitation)">
-                <i class="far fa-copy"></i> 复制引用
+          </div>
+
+          <!-- 修改操作按钮部分 -->
+          <div class="article-actions">
+            <button class="action-btn like" :class="{ active: article.isLike }" @click="toggleLike">
+              <i class="fas fa-heart"></i>
+              <span>{{ article.likeNum }}</span>
+            </button>
+            <div class="share-dropdown" v-click-outside="closeShareMenu">
+              <button class="action-btn share" @click="toggleShareMenu">
+                <i class="fas fa-share-alt"></i>
+                分享
               </button>
+              <div class="share-menu" v-show="showShareMenu">
+                <button class="share-item" @click="shareToQQ">
+                  <i class="fab fa-qq"></i>
+                  QQ好友
+                </button>
+                <button class="share-item" @click="shareToQzone">
+                  <i class="fas fa-star"></i>
+                  QQ空间
+                </button>
+                <button class="share-item" @click="shareToWeibo">
+                  <i class="fab fa-weibo"></i>
+                  微博
+                </button>
+                <button class="share-item" @click="shareToWechat">
+                  <i class="fab fa-weixin"></i>
+                  微信
+                </button>
+                <button class="share-item" @click="copyLink">
+                  <i class="fas fa-link"></i>
+                  复制链接
+                </button>
+              </div>
             </div>
           </div>
-        </section>
 
-        <!-- 5. 数据统计 -->
-        <section id="statistics" class="section-card">
-          <h2 class="section-title">数据访问统计 / Statistics</h2>
-          <div class="stats-overview">
-            <div class="stat-box">
-              <span class="num">{{ article.quantity > 3184 ? article.quantity : 3184 }}</span>
-              <span class="lab">总阅读次数</span>
+          <!-- 导航部分保持不变 -->
+          <!-- <nav class="article-nav">
+            <div 
+              v-if="prevArticle" 
+              class="nav-item prev"
+              @click="goToArticle(prevArticle.id)"
+            >
+              <i class="fas fa-arrow-left"></i>
+              <div class="nav-content">
+                <span class="label">上一篇</span>
+                <span class="title">{{ prevArticle.title }}</span>
+              </div>
             </div>
-            <div class="stat-box">
-              <span class="num">865</span>
-              <span class="lab">数据下载量</span>
+            <div 
+              v-if="nextArticle" 
+              class="nav-item next"
+              @click="goToArticle(nextArticle.id)"
+            >
+              <div class="nav-content">
+                <span class="label">下一篇</span>
+                <span class="title">{{ nextArticle.title }}</span>
+              </div>
+              <i class="fas fa-arrow-right"></i>
             </div>
-            <div class="stat-box">
-              <span class="num">42</span>
-              <span class="lab">文献引用量</span>
-            </div>
-          </div>
+          </nav> -->
+        </footer>
 
-          <div class="charts-layout">
-            <div class="chart-block">
-              <h3 class="chart-subtitle">近一年访问趋势 (Annual Trends)</h3>
-              <div ref="barChart" class="echart-box"></div>
-            </div>
-            <div class="chart-block map-full-width">
-              <h3 class="chart-subtitle">地理分布 (Geographical Distribution)</h3>
-              <div ref="mapChart" class="echart-box map-box"></div>
-            </div>
-          </div>
-        </section>
+        <!-- 添加评论组件 -->
+        <Comment 
+          :article-id="$route.params.id" 
+          :comment-count="article.commentNum || 0"
+          :article-author-id="article.userId || ''" 
+          @comment-added="handleCommentAdded"
+          @comment-deleted="handleCommentDeleted"
+        />
       </main>
 
-      <!-- ================= 右侧侧边栏 (链接卡片) ================= -->
-      <aside class="sidebar-content">
-        <!-- ★★★ 核心升级：真·动态作者关注卡片 ★★★ -->
-        <div class="author-info-card">
-          <div class="avatar-wrap">
-            <!-- 逻辑：优先取后端返回的作者真实头像，没有则用默认图 -->
-            <el-avatar :size="70" :src="article.avatar || 'https://img.shiyit.com/base/avatar.png'"></el-avatar>
-          </div>
-          <!-- 逻辑：优先取后端返回的作者真实昵称，没有则取计算属性 authors 的第一个值 -->
-          <div class="author-name-tag">{{ article.nickname || authors[0] }}</div>
-          <button class="follow-btn-main" :class="{ followed: isFollowed }" @click="handleFollow">
-            <i :class="isFollowed ? 'el-icon-check' : 'el-icon-plus'"></i>
-            {{ isFollowed ? '已关注作者' : '关注作者' }}
-          </button>
-        </div>
-
-        <!-- 侧边操作栏：已激活交互 -->
-        <div class="side-action-card">
-          <div class="action-btn-item" @click="handleLike">
-            <i class="fas fa-thumbs-up" :class="{ active: article.isLike }"></i>
-            <span>{{ article.likeNum || 0 }}</span>
-          </div>
-          <div class="action-btn-item" @click="handleFav">
-            <i class="fas fa-star" :class="{ active: article.isFavorite }"></i>
-            <span>{{ article.favoriteNum || 0 }}</span>
-          </div>
-          <div class="action-btn-item" @click="$message.info('分享功能正在接入...')">
-            <i class="fas fa-share-alt"></i>
-            <span>分享</span>
-          </div>
-        </div>
-
-        <!-- 1. 数据集来源 (打通链接) -->
-        <div class="link-card">
-          <h4 class="card-label">本数据集由</h4>
-          <a :href="article.originalUrl || 'https://pds.wh.sdu.edu.cn/'" target="_blank" class="card-link">
-            《行星数据发布系统 (PDS)》 <i class="fas fa-link"></i>
-          </a>
-        </div>
-
-        <!-- 2. 纳入计划 (打通链接) -->
-        <div class="link-card">
-          <h4 class="card-label">该数据集已被纳入</h4>
-          <a href="https://moon.bao.ac.cn/" target="_blank" class="card-link special">
-            中国探月工程科学数据中心 <i class="fas fa-link"></i>
-          </a>
-        </div>
-
-        <!-- 3. 关联论文 (DOI逻辑) -->
-        <div class="link-card journal-card">
-          <h4 class="card-label">关联论文 / 补充</h4>
-          <div class="journal-item" @click="openExternal(article.originalUrl)">
-            <img src="https://img.shiyit.com/base/mojian/planetary-journal.png" alt="cover">
-            <div class="j-info">
-              <div class="j-title">Nature Astronomy: 月球晚期火山活动数据集分析报告</div>
-              <div class="j-doi">DOI: {{ article.doi || '10.1038/s41550' }}</div>
+      <!-- 侧边栏 -->
+      <aside v-if="showSidebar" class="article-sidebar desktop-only">
+        <div class="toc-container">
+          <div class="toc-header">
+            <div class="title-wrapper">
+            <i class="fas fa-list"></i>
+            <span>目录</span>
+            </div>
+            <div class="progress-wrapper" :class="{ completed: readProgress === 100 }">
+              <i class="fas fa-book-reader"></i>
+              <span class="progress-text">{{ readProgress }}</span>
             </div>
           </div>
-        </div>
-
-        <!-- 4. 推荐数据集 (逻辑跳转) -->
-        <div class="link-card recommend-card">
-          <h4 class="card-label">推荐数据集</h4>
-          <div v-for="i in 3" :key="i" class="rec-item" @click="handleRecJump(i)">
-            <p class="rec-title">基于深度学习的行星{{ i === 1 ? '表面' : '大气' }}健康指标监测...</p>
-            <p class="rec-meta">数据集; 科学研究; 行星探测</p>
+          <div class="toc-content">
+            <div v-for="(item, index) in tocItems" :key="index" class="toc-item" :class="{
+              'active': activeHeading === item.id,
+              [`level-${item.level}`]: true
+            }" @click="scrollToHeading(item.id)">
+              {{ item.text }}
+            </div>
           </div>
         </div>
       </aside>
     </div>
-
-    <!-- 细节浮动导航 -->
-    <nav class="floating-nav-bar">
-      <div class="nav-wrapper">
-        <span class="nav-title">细节导航</span>
-        <a href="#description" class="nav-link">描述</a>
-        <a href="#download" class="nav-link">下载</a>
-        <a href="#cite" class="nav-link">引用</a>
-        <a href="#statistics" class="nav-link">统计</a>
-        <button class="nav-btn-repo" @click="openExternal('https://pds.wh.sdu.edu.cn/')">
-          前往仓库 <i class="fas fa-database"></i>
-        </button>
-      </div>
-    </nav>
+    <mj-image-preview ref="imagePreview" />
+    <payment-dialog
+      :visible.sync="showPaymentDialog"
+      :title="article.title"
+      :price="1"
+      :article-id="$route.params.id"
+      @payment-success="handlePaymentSuccess"
+    />
+    <membership-dialog
+      :visible.sync="showMembershipDialog"
+      @payment-success="handleMembershipSuccess"
+    />
   </div>
 </template>
 
 <script>
-import * as echarts from 'echarts';
 import { getArticleDetailApi, likeArticleApi } from '@/api/article'
+import hljs from 'highlight.js'
+import 'highlight.js/styles/atom-one-dark.css'
+import Comment from '@/components/Comment/index.vue'
+import PaymentDialog from '@/components/PaymentDialog/index.vue'
+import MembershipDialog from '@/components/MembershipDialog/index.vue'
+import { marked } from 'marked'
 
 export default {
-  name: 'PlanetaryDataDetail',
+  name: 'Article',
+  components: {
+    Comment,
+    PaymentDialog,
+    MembershipDialog
+  },
   data() {
     return {
       article: {
-        category: {}
+        title: '',
+        category: {},
+        isOriginal: true,
+        readType: 1,
+        price: 0,
       },
+      prevArticle: {
+        id: 1,
+        title: '默认文章',
+      },
+      nextArticle: {
+        id: 1,
+        title: '默认文章',
+      },
+      tocItems: [],
+      readProgress: 0,
+      showShareMenu: false,
+      activeHeading: '',
+      readTime: 0,
+      likeDebounce: false,
       loading: false,
-      isFollowed: false, // 关注状态（活的）
-      fileQuery: '',
-      citeType: 'GB/T 7714',
-      barChart: null,
-      mapChart: null,
+      actionBarLeft: '0px',
+      showSidebar: true,
+      contentLayout: 'center',
+      collapsedCodeBlocks: new Set(),
+      images: [],
+      showPaymentDialog: false,
+      showMembershipDialog: false,
+      isAiDescriptionExpanded: true,
     }
   },
   computed: {
-    // 动态作者
-    authors() {
-      if (!this.article.author) return ['行星科学研究团队'];
-      return this.article.author.split(/[,，]/).map(s => s.trim());
-    },
-    // 动态关键词
-    keywords() {
-      if (!this.article.keywords) return ['月球', '火星', '深空探测'];
-      return this.article.keywords.split(/[,，]/).map(s => s.trim());
-    },
-    // 动态引用生成逻辑 (修复写死问题)
-    dynamicCitation() {
-      const year = new Date().getFullYear();
-      const title = this.article.title || '行星数据集';
-      const firstAuthor = this.authors[0];
-
-      if (this.citeType === 'APA') {
-        return `${firstAuthor}, et al. (${year}). ${title}. Planetary Data System (PDS).`;
-      } else if (this.citeType === 'BibTeX') {
-        return `@data{pds_${this.article.id}, author = {${firstAuthor}}, title = {${title}}, year = {${year}}}`;
-      }
-      return `${this.authors.join(', ')}. ${title}[DS]. 行星数据发布系统, ${year}.`;
+    currentUrl() {
+      return window.location.href
     }
   },
   methods: {
-    async fetchDetail() {
-      this.loading = true;
+    /**
+     * 获取文章详情
+     */
+    async getArticle() {
+      this.loading = true
+      hljs.configure({
+        ignoreUnescapedHTML: true
+      })
       try {
-        const res = await getArticleDetailApi(this.$route.params.id);
-        this.article = res.data;
-        // 等待 DOM 渲染后初始化图表
-        this.$nextTick(() => {
-          this.initBarChart();
-          this.initMapChart();
-        });
-      } catch (err) {
-        this.$message.error('获取科学数据详情失败');
-      } finally {
-        this.loading = false;
-      }
-    },
+        const res = await getArticleDetailApi(this.$route.params.id)
+        this.article = {
+          ...res.data,
+          content: res.data.content ? this.addLazyLoadToImages(res.data.content) : ''
+        }
 
-    // 修正月份乱码问题：重新手打纯净字符
-    initBarChart() {
-      const dom = this.$refs.barChart;
-      if (!dom) return;
-      this.barChart = echarts.init(dom);
-      this.barChart.setOption({
-        tooltip: { trigger: 'axis' },
-        grid: { top: 20, left: 40, right: 20, bottom: 40 },
-        xAxis: {
-          type: 'category',
-          data: ['2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月', '1月'],
-          axisLabel: { interval: 0, fontSize: 11 }
-        },
-        yAxis: { type: 'value' },
-        series: [{
-          name: '阅读量',
-          type: 'bar',
-          barWidth: '40%',
-          data: [0, 0, 0, 0, 0, 0, 150, 320, 280, 450, 700, 1284],
-          itemStyle: {
-            color: '#0369a1',
-            borderRadius: [4, 4, 0, 0]
+        // 等待下一个 tick，确保文章内容渲染完成
+        await this.$nextTick()
+        
+        // 使用 setTimeout 确保 DOM 完全渲染
+        setTimeout(() => {
+          this.generateToc()
+          document.querySelectorAll('pre code').forEach((block) => {
+            hljs.highlightBlock(block)
+          })
+          this.addCopyButtons()
+          this.addLineNumbers()
+          this.initImagePreview()
+          this.updateActionBarPosition()
+          
+          // 添加一个额外的延时来处理代码块的展开/折叠
+          this.initializeCodeBlocks()
+          
+          // AI摘要
+          if (this.article.aiDescribe) {
+            const typingText = this.$refs.typingText
+            if (!typingText) return
+            // 使用marked解析Markdown文本
+            const htmlContent = marked(this.article.aiDescribe || '')
+            typingText.innerHTML = htmlContent
           }
-        }]
-      });
-    },
+        }, 100)
 
-    // 2. 核心：世界地图 (fetch加载版)
-    async initMapChart() {
-      const dom = this.$refs.mapChart;
-      if (!dom) return;
-      this.mapChart = echarts.init(dom);
+        // 计算阅读时间
+        const textContent = this.article.content.replace(/<[^>]+>/g, ' ')
+        this.readTime = Math.ceil(textContent.split(/\s+/).length / 300)
+
+      } catch (error) {
+        this.$message.error('获取文章详情失败')
+      } finally {
+        this.loading = false
+      }
+    },
+    /**
+     * 为文章内容中的图片添加懒加载
+     */
+    addLazyLoadToImages(content) {
+      // 使用data-src来存储实际图片地址，并添加lazy-image类用于识别
+      return content.replace(
+        /<img([^>]*)src="([^"]*)"([^>]*)>/gi,
+        '<img$1src="' + this.getLoadingImage() + '" data-src="$2" class="lazy-image"$3>'
+      )
+    },
+    /**
+     * 获取加载中的图片
+     */
+    getLoadingImage() {
+      return 'https://img.shiyit.com/base/mojian/lazy.gif'
+    },
+    /**
+     * 生成目录
+     */
+    generateToc() {
+      const headings = document.querySelectorAll('.article-content h1,.article-content h2,.article-content h3,.article-content h4,.article-content h5,.article-content h6')
+      this.tocItems = Array.from(headings).map(heading => {
+        const id = heading.textContent.trim().toLowerCase().replace(/\s+/g, '-')
+        heading.id = id
+        return {
+          id,
+          text: heading.textContent,
+          level: parseInt(heading.tagName.charAt(1))
+        }
+      })
+    },
+    /**
+     * 点赞
+     */
+    toggleLike() {
+      //防止频繁点击 设置一个5秒的防抖
+      if (this.likeDebounce) {
+        this.$message.warning('请于 5 秒后再试')
+        return
+      }
+      // 实现点赞功能
+      likeArticleApi(this.$route.params.id).then(res => {
+        if (this.article.isLike) {
+          this.article.likeNum--
+        } else {
+          this.article.likeNum++
+        }
+        this.$message.success(this.article.isLike ? '取消点赞成功' : '点赞成功')
+        this.article.isLike = !this.article.isLike
+        // 设置一个5秒的防抖
+        this.likeDebounce = true
+        setTimeout(() => {
+          this.likeDebounce = false
+        }, 5000)
+      })
+    },
+    /**
+     * 分享
+     */
+    toggleShareMenu() {
+      this.showShareMenu = !this.showShareMenu
+    },
+    /**
+     * 关闭分享
+     */
+    closeShareMenu() {
+      this.showShareMenu = false
+    },
+    /**
+     * 分享到QQ
+     */
+    shareToQQ() {
+      const url = encodeURIComponent(this.currentUrl)
+      const title = encodeURIComponent(this.article.title)
+      const summary = encodeURIComponent(this.article.summary || '')
+      const pic = encodeURIComponent(this.article.avatar || '')
+      window.open(
+        `https://connect.qq.com/widget/shareqq/index.html?url=${url}&title=${title}&summary=${summary}&pics=${pic}`,
+        "renren-share", "width=490,height=700");
+      this.closeShareMenu()
+    },
+    /**
+     * 分享到QQ空间
+     */
+    shareToQzone() {
+      const url = encodeURIComponent(this.currentUrl)
+      const title = encodeURIComponent(this.article.title)
+      const summary = encodeURIComponent(this.article.summary || '')
+      const pic = encodeURIComponent(this.article.avatar || '')
+      window.open(
+        `https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=${url}&title=${title}&summary=${summary}&pics=${pic}`,
+        "renren-share", "width=490,height=700"
+      )
+
+      this.closeShareMenu()
+    },
+    /**
+     * 分享到微博
+     */
+    shareToWeibo() {
+      const url = encodeURIComponent(this.currentUrl)
+      const title = encodeURIComponent(`${this.article.title} - 拾壹博客`)
+      window.open(
+        `http://service.weibo.com/share/share.php?url=${url}&title=${title}`,
+        "renren-share", "width=490,height=700")
+      this.closeShareMenu()
+    },
+    /**
+     * 分享到微信
+     */
+    shareToWechat() {
+      // 由于微信分享需要使用微信SDK，这样简单处理
+      window.open(
+        `https://api.pwmqr.com/qrcode/create/?url=${window.location.href}`,
+        "renren-share", "width=490,height=700");
+      this.closeShareMenu()
+    },
+    /**
+     * 复制链接
+     */
+    async copyLink() {
       try {
-        const response = await fetch('https://cdn.jsdelivr.net/npm/echarts@4.9.0/map/json/world.json');
-        const worldJson = await response.json();
-        echarts.registerMap('world', worldJson);
-        const option = {
-          visualMap: {
-            min: 0, max: 100, left: 'left', top: 'bottom',
-            text: ['High', 'Low'], calculable: true,
-            inRange: { color: ['#e0f2fe', '#0ea5e9'] }
-          },
-          series: [{
-            name: '全球访问分布',
-            type: 'map',
-            map: 'world',
-            roam: true,
-            emphasis: { label: { show: true }, itemStyle: { areaColor: '#0369a1' } },
-            data: [
-              { name: 'China', value: 95 },
-              { name: 'United States', value: 40 },
-              { name: 'Russia', value: 15 },
-              { name: 'Japan', value: 10 }
-            ]
-          }]
-        };
-        this.mapChart.setOption(option);
-      } catch (e) {
-        console.warn('地图数据加载失败');
+        await navigator.clipboard.writeText(this.currentUrl)
+        this.$message.success('链接已复制到剪贴板')
+      } catch (err) {
+        this.$message.error('复制失败，请手动复制')
+      }
+      this.closeShareMenu()
+    },
+    /**
+     * 跳转到文章
+     */
+    goToArticle(id) {
+      this.$router.push(`/article/${id}`)
+    },
+    /**
+     * 更新阅读进度
+     */
+    handleScroll() {
+      const docEl = document.documentElement
+      const winHeight = window.innerHeight
+      const docHeight = docEl.scrollHeight - winHeight
+      const scrollTop = window.scrollY || docEl.scrollTop
+      this.readProgress = Math.round((scrollTop / docHeight) * 100)
+    },
+    /**
+     * 滚动到标题
+     */
+    scrollToHeading(id) {
+      const element = document.getElementById(id)
+      if (element) {
+        const header = document.querySelector('.site-header')
+        const headerHeight = header ? header.offsetHeight : 0
+        const targetPosition = element.offsetTop - headerHeight - 20
+
+        window.scrollTo({
+          top: targetPosition,
+          behavior: 'smooth'
+        })
       }
     },
+    /**
+     * 更新激活标题
+     */
+    updateActiveHeading() {
+      this.handleScroll()
+      const headings = this.tocItems.map(item => document.getElementById(item.id))
+      const header = document.querySelector('.site-header')
+      const headerHeight = header ? header.offsetHeight : 0
 
-    // 复制功能
-    copyText(text) {
-      if (!text) return;
-      navigator.clipboard.writeText(text);
-      this.$message.success('已复制到剪贴板');
+      for (let i = headings.length - 1; i >= 0; i--) {
+        const heading = headings[i]
+        if (heading && heading.getBoundingClientRect().top <= headerHeight + 100) {
+          this.activeHeading = heading.id
+          break
+        }
+      }
     },
+    /**
+     * 添加复制按钮
+     */
+    addCopyButtons() {
+      const codeBlocks = document.querySelectorAll('.article-content pre')
+      if (!codeBlocks.length) return
 
-    // 下载功能
-    handleDownload() {
-      const fileUrl = this.article.fileUrl || this.article.originalUrl;
-      if (fileUrl) {
-        window.open(fileUrl, '_blank');
-        this.$message.success('已发起下载请求');
+      codeBlocks.forEach(pre => {
+        // 检查是否已经添加过复制按钮
+        if (pre.querySelector('.code-header')) return
+
+        // 创建复制按钮容器
+        const buttonWrapper = document.createElement('div')
+        buttonWrapper.className = 'code-header'
+
+        // 创建复制按钮
+        const copyButton = document.createElement('button')
+        copyButton.className = 'copy-button'
+        copyButton.innerHTML = '<i class="fas fa-copy"></i> 复制'
+        copyButton.title = '复制代码'
+
+        // 添加点击事件
+        copyButton.addEventListener('click', async () => {
+          try {
+            const code = pre.querySelector('code')
+            await navigator.clipboard.writeText(code.textContent)
+            copyButton.innerHTML = '<i class="fas fa-check"></i> 已复制'
+            copyButton.classList.add('copied')
+            setTimeout(() => {
+              copyButton.innerHTML = '<i class="fas fa-copy"></i> 复制'
+              copyButton.classList.remove('copied')
+            }, 2000)
+            this.$message.success('复制成功')
+          } catch (err) {
+            this.$message.error('复制失败，请手动复制')
+          }
+        })
+
+        // 将按钮添加到代码块
+        buttonWrapper.appendChild(copyButton)
+        pre.appendChild(buttonWrapper)
+      })
+    },
+    /**
+     * 初始化图片预览
+     */
+    initImagePreview() {
+      // 使用 IntersectionObserver 监听图片
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const img = entry.target
+            const actualSrc = img.getAttribute('data-src')
+            if (actualSrc) {
+              // 创建一个新的图片对象来预加载
+              const tempImg = new Image()
+              tempImg.onload = () => {
+                img.src = actualSrc
+                img.classList.add('loaded')
+              }
+              tempImg.onerror = () => {
+                img.src = 'https://img.shiyit.com/base/mojian/img-error.jpg'
+                img.classList.add('error')
+              }
+              tempImg.src = actualSrc
+              img.removeAttribute('data-src')
+              observer.unobserve(img)
+            }
+          }
+        })
+      }, {
+        rootMargin: '50px 0px',
+        threshold: 0.1
+      })
+
+      // 监听所有带有 lazy-image 类的图片
+      setTimeout(() => {
+        const lazyImages = document.querySelectorAll('.lazy-image')
+        lazyImages.forEach(img => {
+          observer.observe(img)
+        })
+
+        // 收集所有图片URL用于预览
+        this.images = Array.from(document.querySelectorAll('.article-content img')).map(img => 
+          img.getAttribute('data-src') || img.getAttribute('src')
+        )
+
+        // 为图片添加点击事件
+        document.querySelectorAll('.article-content img').forEach(img => {
+          img.style.cursor = 'zoom-in'
+          img.addEventListener('click', this.handleImageClick)
+        })
+      }, 200)
+    },
+    /**
+     * 处理图片点击
+     */
+    handleImageClick(e) {
+      const img = e.target
+      if (img.tagName === 'IMG') {
+        this.$refs.imagePreview.show(this.images, this.images.indexOf(img.src))
+      }
+    },
+    toggleDislike() {
+      // 实现点踩功能
+      if (this.likeDebounce) {
+        this.$message.warning('请于 5 秒后再试')
+        return
+      }
+      // TODO: 调用点踩 API
+      this.$message.success(this.article.isDislike ? '取消点踩成功' : '点踩成功')
+      if (this.article.isDislike) {
+        this.article.dislikeNum--
       } else {
-        this.$message.warning('该数据集暂未挂载物理文件');
+        this.article.dislikeNum++
       }
+      this.article.isDislike = !this.article.isDislike
+      this.likeDebounce = true
+      setTimeout(() => {
+        this.likeDebounce = false
+      }, 5000)
     },
-
-    openExternal(url) {
-      if (url) window.open(url, '_blank');
-      else this.$message.info('暂无外部链接');
-    },
-
-    handleRecJump(id) {
-      this.$message.info('该文章暂不存在');
-    },
-
-    // 新增：关注逻辑
-    handleFollow() {
-      this.isFollowed = !this.isFollowed;
-      if (this.isFollowed) {
-        this.$message.success('您已关注该作者');
-      } else {
-        this.$message.info('您已取消关注该作者');
-      }
-    },
-
-    // 前端点赞逻辑
-    handleLike() {
-      this.$set(this.article, 'isLike', !this.article.isLike);
-      if (this.article.isLike) {
-        this.article.likeNum = (this.article.likeNum || 0) + 1;
-        this.$message.success('感谢您的点赞支持！');
-      } else {
-        this.article.likeNum = Math.max(0, this.article.likeNum - 1);
-        this.$message.info('已取消点赞');
-      }
-    },
-
-    // 前端收藏逻辑
-    handleFav() {
-      this.$set(this.article, 'isFavorite', !this.article.isFavorite);
+    toggleFavorite() {
+      this.$message.warning('暂未开放')
+      return
+      // 实现收藏功能
+      this.$message.success(this.article.isFavorite ? '取消收藏成功' : '收藏成功')
       if (this.article.isFavorite) {
-        this.article.favoriteNum = (this.article.favoriteNum || 0) + 1;
-        this.$message({ message: '成功加入收藏夹', type: 'success', iconClass: 'el-icon-star-on' });
+        this.article.favoriteNum--
       } else {
-        this.article.favoriteNum = Math.max(0, this.article.favoriteNum - 1);
-        this.$message('已从收藏夹移除');
+        this.article.favoriteNum++
       }
+      this.article.isFavorite = !this.article.isFavorite
+    },
+    toggleSidebar() {
+      this.showSidebar = !this.showSidebar
+      // 等待 DOM 更新后重新计算操作栏位置
+      this.$nextTick(() => {
+        this.updateActionBarPosition()
+      })
+    },
+    scrollToComments() {
+      const commentsSection = document.querySelector('.comment-section')
+      if (commentsSection) {
+        commentsSection.scrollIntoView({ behavior: 'smooth' })
+      }
+    },
+    updateActionBarPosition() {
+      const articleBox = document.getElementById("articleBox")
+      if (articleBox) {
+        const rect = articleBox.getBoundingClientRect()
+        this.actionBarLeft = (rect.left - 95) + 'px'
+      }
+    },
+    /**
+     * 初始化代码块的展开/折叠功能
+     */
+    initializeCodeBlocks() {
+      const codeBlocks = document.querySelectorAll('.article-content pre')
+      codeBlocks.forEach((pre, index) => {
+        // 移除可能存在的旧按钮
+        const oldButton = pre.querySelector('.expand-button')
+        if (oldButton) {
+          oldButton.remove()
+        }
+
+        // 获取代码块的实际高度
+        const actualHeight = pre.scrollHeight
+        
+        if (actualHeight > 500) {
+          // 添加折叠类
+          pre.classList.add('collapsed')
+          
+          // 创建展开按钮
+          const expandButton = document.createElement('button')
+          expandButton.className = 'expand-button'
+          expandButton.innerHTML = '<i class="fas fa-chevron-down"></i>展开代码'
+          
+          // 添加点击事件
+          expandButton.onclick = (e) => {
+            e.stopPropagation()
+            const isCollapsed = pre.classList.contains('collapsed')
+            if (isCollapsed) {
+              pre.classList.remove('collapsed')
+              expandButton.innerHTML = '<i class="fas fa-chevron-up"></i>收起代码'
+              this.collapsedCodeBlocks.delete(index)
+            } else {
+              pre.classList.add('collapsed')
+              expandButton.innerHTML = '<i class="fas fa-chevron-down"></i>展开代码'
+              this.collapsedCodeBlocks.add(index)
+            }
+          }
+          
+          pre.appendChild(expandButton)
+        }
+      })
+    },
+    /**
+     * 添加行号
+     */
+    addLineNumbers() {
+      const codeBlocks = document.querySelectorAll('.article-content pre code')
+      codeBlocks.forEach((code) => {
+        const pre = code.parentElement
+        
+        // 检查是否已添加行号
+        if (!pre.querySelector('.line-numbers')) {
+          const lines = code.textContent.split('\n').length
+          const lineNumbers = document.createElement('div')
+          lineNumbers.className = 'line-numbers'
+
+          for (let i = 1; i <= lines; i++) {
+            const span = document.createElement('span')
+            span.textContent = i
+            lineNumbers.appendChild(span)
+          }
+
+          pre.insertBefore(lineNumbers, code)
+        }
+      })
+    },
+    /**
+     * 获取预览内容
+     */
+    getPreviewContent(content) {
+      // 返回内容的前300个字符，并确保HTML标签完整
+      const div = document.createElement('div')
+      div.innerHTML = content
+      const text = div.textContent || div.innerText
+      return text.substring(0, 300) + '...'
+    },
+    /**
+     * 处理会员升级
+     */
+    handleUpgrade() {
+      if (!this.$store.state.userInfo) {
+        this.$message.warning('请先登录')
+        return
+      }
+      this.showMembershipDialog = true
+    },
+    /**
+     * 处理付费购买
+     */
+    handlePurchase() {
+      if (!this.$store.state.userInfo) {
+        this.$message.warning('请先登录')
+        return
+      }
+      this.showPaymentDialog = true
+    },
+    /**
+     * 处理支付成功
+     */
+    handlePaymentSuccess() {
+      // 重新获取文章信息
+      this.getArticle()
+    },
+    /**
+     * 处理会员开通成功
+     */
+    handleMembershipSuccess() {
+      // 重新获取文章信息
+      this.getArticle()
+    },
+    /**
+     * 处理评论添加
+     */
+    handleCommentAdded() {
+      this.article.commentNum = (this.article.commentNum || 0) + 1;
+    },
+
+    /**
+     * 处理评论删除
+     */
+    handleCommentDeleted() {
+      this.article.commentNum = Math.max((this.article.commentNum || 0) - 1, 0);
+    },
+
+    startTransition(element) {
+      element.style.height = 'auto'
+      const height = element.scrollHeight
+      element.style.height = '0px'
+      // 触发回流
+      element.offsetHeight
+      element.style.height = height + 'px'
+    },
+    endTransition(element) {
+      element.style.height = element.scrollHeight + 'px'
+      // 触发回流
+      element.offsetHeight
+      element.style.height = '0px'
     }
   },
+  async created() {
+    await this.getArticle()
+    window.addEventListener('resize', this.updateActionBarPosition)
+  },
   mounted() {
-    this.fetchDetail();
-    window.addEventListener('resize', () => {
-      this.barChart && this.barChart.resize();
-      this.mapChart && this.mapChart.resize();
-    });
+    window.addEventListener('scroll', this.updateActiveHeading)
+    this.$nextTick(() => {
+      this.initImagePreview()
+    })
+  },
+  beforeDestroy() {
+    window.removeEventListener('scroll', this.updateActiveHeading)
+    window.removeEventListener('resize', this.updateActionBarPosition)
+    // 清理图片点击事件监听器
+    const images = document.querySelectorAll('.article-content img')
+    images.forEach(img => {
+      img.removeEventListener('click', this.handleImageClick)
+    })
+  },
+  watch: {
+    // 监听路由参数变化
+    '$route'(to, from) {
+      if (to.params.id !== from.params.id) {
+        // 重新获取文章数据
+        this.getArticleData() 
+      }
+    }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-// 定义行星科学专用配色
-$pds-dark: #0c4a6e;
-$pds-blue: #0ea5e9;
-$pds-bg: #f8fafc;
-$pds-border: #e2e8f0;
-
-.planetary-detail-page {
-  max-width: 1440px;
+.article-page {
+  max-width: 1300px;
   margin: 0 auto;
-  padding: 30px;
-  background-color: $pds-bg;
-  min-height: 100vh;
-}
-
-// 顶部导航样式
-.breadcrumb-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-  background: white;
-  padding: 12px 25px;
-  border-radius: 50px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-  .status-badge { background: $pds-blue; color: white; padding: 2px 12px; border-radius: 20px; font-weight: bold; font-size: 13px; }
-  .category-name { margin-left: 10px; font-weight: 700; color: $pds-dark; }
-  .meta-info-group { color: #64748b; font-size: 13px; span { margin-left: 20px; i { margin-right: 5px; } } }
+  padding: $spacing-lg;
+  @include responsive(lg) {
+    padding: $spacing-sm;
+  }
 }
 
 .content-layout {
   display: grid;
-  grid-template-columns: 1fr 380px;
-  gap: 30px;
-  @media (max-width: 1100px) { grid-template-columns: 1fr; }
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: $spacing-md * 2;
+  transition: all 0.3s ease;
+
+  &.center {
+    grid-template-columns: 1fr;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  @include responsive(lg) {
+    grid-template-columns: 1fr;
+    gap: $spacing-lg;
+    padding: 0;
+  }
 }
 
-// 卡片通用样式
-.section-card {
-  background: white;
-  padding: 35px;
-  border-radius: 16px;
-  margin-bottom: 30px;
-  border: 1px solid $pds-border;
-  transition: all 0.3s ease;
-  &:hover { box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+.article-main {
+  background: var(--card-bg);
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-md;
+  overflow: hidden;
+}
 
-  .section-title {
-    font-size: 22px;
-    font-weight: 800;
-    color: $pds-dark;
-    margin-bottom: 25px;
+.article-header {
+  padding: $spacing-lg $spacing-xl;
+  position: relative;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--card-bg);
+
+  .article-title {
+    color: var(--text-primary);
+    font-size: 1.8em;
+    line-height: 1.4;
+    margin-bottom: $spacing-lg;
+    text-align: left;
+  }
+
+  .article-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: $spacing-md;
+
+    .author-info {
+      display: flex;
+      align-items: center;
+      gap: $spacing-md;
+
+      .author-avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid rgba($primary, 0.2);
+        padding: 2px;
+        background: var(--card-bg);
+        transition: all 0.3s ease;
+
+        &:hover {
+          transform: rotate(360deg);
+          border-color: $primary;
+        }
+      }
+
+      .author-meta {
+        display: flex;
+        flex-direction: column;
+        gap: $spacing-xs;
+
+        .author-name {
+          color: $primary;
+          font-weight: 600;
+          font-size: 1.1em;
+        }
+
+        .post-meta {
+          display: flex;
+          align-items: center;
+          gap: $spacing-sm;
+          color: var(--text-secondary);
+          font-size: 0.9em;
+
+          i {
+            color: $primary;
+            margin-right: 4px;
+          }
+
+          .meta-divider {
+            color: var(--text-secondary);
+            opacity: 0.5;
+          }
+
+          .category {
+            color: $primary;
+          }
+        }
+      }
+    }
+
+    .article-stats {
+      display: flex;
+      align-items: center;
+      gap: $spacing-lg;
+
+      .stat-item {
+        display: flex;
+        align-items: center;
+        gap: $spacing-xs;
+        color: var(--text-secondary);
+        font-size: 0.95em;
+
+        i {
+          color: $primary;
+          font-size: 1.1em;
+        }
+      }
+    }
+  }
+}
+
+.article-content {
+  padding: 0 $spacing-md * 2;
+  line-height: 1.8;
+  color: var(--text-primary);
+  font-size: 1.1em;
+
+  :deep(h2) {
+    font-size: 1.8em;
+    margin: $spacing-xl 0 $spacing-lg;
+    padding-bottom: $spacing-sm;
+    border-bottom: 2px solid rgba($primary, 0.1);
+    position: relative;
+    color: var(--text-primary);
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 50px;
+      height: 2px;
+      background: $primary;
+    }
+  }
+
+  :deep(h3) {
+    font-size: 1.4em;
+    margin: $spacing-lg 0;
+    color: var(--text-primary);
+    position: relative;
+    padding-left: $spacing-lg;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 4px;
+      height: 20px;
+      background: $primary;
+      border-radius: $border-radius-sm;
+    }
+  }
+
+  :deep(p) {
+    margin: $spacing-md 0;
+    color: var(--text-secondary);
+    line-height: 1.8;
+  }
+
+  :deep(a) {
+    color: $primary;
+    text-decoration: none;
+    border-bottom: 1px dashed $primary;
+    transition: all 0.3s ease;
+
+    &:hover {
+      color: var(--primary-dark);
+      border-bottom-style: solid;
+    }
+  }
+
+  :deep(blockquote) {
+    margin: $spacing-lg 0;
+    padding: $spacing-md $spacing-lg;
+    background: var(--hover-bg);
+    border-left: 4px solid $primary;
+    border-radius: $border-radius-sm;
+    color: var(--text-secondary);
+    font-style: italic;
+
+    p {
+      margin: 0;
+    }
+  }
+
+  :deep(ul),
+  :deep(ol) {
+    margin: $spacing-md 0;
+    padding-left: $spacing-xl;
+    color: var(--text-secondary);
+
+    li {
+      margin-bottom: $spacing-sm;
+      position: relative;
+
+      &::marker {
+        color: $primary;
+      }
+    }
+  }
+
+  :deep(code:not([class])) {
+    font-size: 14px;
+    line-height: 1.5;
+    position: relative;
+    color:rgb(239, 89, 84);
+    background:rgb(243, 244, 244);
+    border-radius: 6px;
+    padding: $spacing-xs;
+    margin: 0 $spacing-xs;
+  }
+
+  :deep(pre) {
+    margin: 1em 0;
+    position: relative;
+    background: #282c34;
+    border-radius: 6px;
+    padding-top: 2.5em;
+    overflow: hidden;
+    max-height: 2000px;
+    transition: max-height 0.4s ease-in-out;
+
+    &.collapsed {
+      max-height: 300px;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 60px;
+        background: linear-gradient(transparent, #282c34);
+        pointer-events: none;
+        z-index: 2;
+      }
+
+      .expand-button {
+        display: flex !important;
+      }
+    }
+
+    .expand-button {
+      position: absolute;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 6px 16px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      color: #abb2bf;
+      cursor: pointer;
+      z-index: 3;
+      font-size: 0.9em;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+        transform: translateX(-50%) translateY(-2px);
+      }
+
+      i {
+        font-size: 14px;
+      }
+    }
+
+    /* 添加行号容器样式 */
+    .line-numbers {
+      position: absolute;
+      left: 0;
+      top: 2.5em;
+      bottom: 0;
+      font-size: 14px;
+      padding: 1em 0;
+      text-align: right;
+      color: #666;
+      border-right: 1px solid #404040;
+      background: #2d323b;
+      user-select: none;
+      z-index: 1;
+
+      span {
+        display: block;
+        padding: 0 0.5em;
+        min-width: 2.5em;
+        line-height: 1.5;
+      }
+    }
+
+    /* 调整代码内容的样式 */
+    code {
+      display: block;
+      padding: 1em;
+      padding-left: 4em;
+      /* 增加左侧padding */
+      margin-left: 0;
+      /* 移除margin */
+      overflow-x: auto;
+      font-family: 'Fira Code', monospace;
+      font-size: 14px;
+      line-height: 1.5;
+      position: relative;
+    
+    }
+
+    /* 添加仿 macOS 风格的按钮 */
+    &::before {
+      content: '';
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #ff5f56;
+      box-shadow:
+        20px 0 0 #ffbd2e,
+        40px 0 0 #27c93f;
+    }
+
+    /* 复制按钮容器 */
+    .code-header {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      z-index: 2;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    /* 显示复制按钮 */
+    &:hover .code-header {
+      opacity: 1;
+    }
+
+    /* 复制按钮样式 */
+    .copy-button {
+      padding: 4px 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      border-radius: 4px;
+      color: #abb2bf;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+
+      i {
+        font-size: 14px;
+      }
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+      }
+
+      &.copied {
+        background: #98c379;
+        color: #fff;
+      }
+    }
+  }
+
+  :deep(img.lazy-image) {
+    opacity: 0;
+  
+    
+    &.loaded {
+      opacity: 1;
+    }
+
+    &.error {
+      opacity: 0.5;
+    }
+  }
+
+  :deep(img) {
+    max-width: 100%;
+    border-radius: $border-radius-md;
+    margin: $spacing-lg 0;
+    transition: all 0.3s ease;
+    box-shadow: $shadow-md;
+    cursor: zoom-in;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: $shadow-lg;
+    }
+  }
+
+  :deep(table) {
+    width: 100%;
+    margin: $spacing-lg 0;
+    border-collapse: collapse;
+    border-radius: $border-radius-md;
+    overflow: hidden;
+
+    th,
+    td {
+      padding: $spacing-sm $spacing-md;
+      border: 1px solid var(--border-color);
+    }
+
+    th {
+      background: var(--hover-bg);
+      color: var(--text-primary);
+      font-weight: 500;
+      text-align: left;
+    }
+
+    tr:nth-child(even) {
+      background: var(--hover-bg);
+    }
+  }
+
+  :deep(hr) {
+    margin: $spacing-xl 0;
+    border: none;
+    height: 1px;
+    background: var(--border-color);
+    position: relative;
+
+    &::before {
+      content: '§';
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--card-bg);
+      padding: 0 $spacing-lg;
+      color: var(--text-secondary);
+      font-size: 1.2em;
+    }
+  }
+
+  .locked-content {
+    position: relative;
+    
+    .preview-content {
+      max-height: 300px;
+      overflow: hidden;
+      position: relative;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 100px;
+        background: linear-gradient(transparent, var(--card-bg));
+        pointer-events: none;
+      }
+    }
+    
+    .content-locker {
+      position: relative;
+      margin-top: -60px;
+      padding: $spacing-xl;
+      text-align: center;
+      background: var(--card-bg);
+      border-radius: $border-radius-lg;
+      box-shadow: $shadow-lg;
+      z-index: 1;
+      
+      .locker-icon {
+        width: 60px;
+        height: 60px;
+        margin: 0 auto $spacing-lg;
+        background: rgba($primary, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        i {
+          font-size: 1.8em;
+          color: $primary;
+        }
+      }
+      
+      h3 {
+        color: var(--text-primary);
+        font-size: 1.4em;
+        margin-bottom: $spacing-sm;
+      }
+      
+      p {
+        color: var(--text-secondary);
+        margin-bottom: $spacing-lg;
+      }
+      
+      .el-button {
+        padding: $spacing-sm $spacing-xl;
+        font-size: 1.1em;
+      }
+    }
+    
+    &.member .locker-icon {
+      background: rgba(#FFD700, 0.1);
+      
+      i {
+        color: #FFD700;
+      }
+    }
+    
+    &.paid .locker-icon {
+      background: rgba(#E6162D, 0.1);
+      
+      i {
+        color: #E6162D;
+      }
+    }
+  }
+}
+
+.article-footer {
+  padding: $spacing-md * 2;
+  border-top: 1px solid var(--border-color);
+
+  @include responsive(lg) {
+    padding: $spacing-sm;
+  }
+
+  .copyright-notice {
+    margin-bottom: $spacing-xl;
+    background: var(--hover-bg);
+    border-radius: $border-radius-lg;
+    overflow: hidden;
+
+    .notice-header {
+      padding: $spacing-md $spacing-lg;
+      background: rgba($primary, 0.1);
+      color: $primary;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+    }
+
+    .notice-content {
+      padding: $spacing-lg;
+      color: var(--text-secondary);
+      font-size: 0.95em;
+      line-height: 1.6;
+
+      .notice-item {
+        display: flex;
+        align-items: center;
+        gap: $spacing-sm;
+        padding: $spacing-xs 0;
+
+        i {
+          color: $primary;
+          font-size: 1em;
+          width: 16px;
+          text-align: center;
+        }
+
+        a {
+          color: $primary;
+          text-decoration: none;
+          border-bottom: 1px dashed $primary;
+          transition: all 0.2s ease;
+
+          &:hover {
+            border-bottom-style: solid;
+          }
+        }
+
+        &.notice-warning {
+          margin-top: $spacing-sm;
+          padding: $spacing-sm;
+          background: rgba($primary, 0.05);
+          border-radius: $border-radius-sm;
+
+          i {
+            color: #ff9800;
+          }
+        }
+      }
+    }
+  }
+
+  .tags-section {
     display: flex;
     align-items: center;
-    &::before { content: ''; width: 5px; height: 24px; background: $pds-blue; margin-right: 15px; border-radius: 3px; }
-  }
-}
+    gap: $spacing-md;
+    margin-bottom: $spacing-xl;
 
-// 标题头样式
-.article-header {
-  margin-bottom: 35px;
-  .data-title {
-    font-size: 34px;
-    line-height: 1.3;
-    color: #0f172a;
-    margin-bottom: 25px;
-    i { color: #cbd5e1; font-size: 20px; margin-left: 15px; cursor: pointer; transition: 0.3s; &:hover { color: $pds-blue; } }
-  }
-  .id-panel {
-    display: flex; gap: 15px; margin-bottom: 25px;
-    .id-item {
-      background: #f1f5f9; padding: 8px 16px; border-radius: 8px; font-size: 13px; display: flex; align-items: center; gap: 12px;
-      .label { font-weight: bold; color: #64748b; border-right: 1px solid #cbd5e1; padding-right: 12px; }
-      .val { font-family: 'Fira Code', monospace; color: $pds-dark; }
-      i { cursor: pointer; color: $pds-blue; &:hover { transform: scale(1.2); } }
+    i {
+      color: $primary;
+    }
+
+    .tags-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: $spacing-sm;
+    }
+
+    .tag-item {
+      padding: $spacing-xs $spacing-md;
+      background: var(--hover-bg);
+      color: var(--text-secondary);
+      border-radius: $border-radius-lg;
+      font-size: 0.9em;
+      text-decoration: none;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: $primary;
+        color: white;
+        transform: translateY(-2px);
+      }
     }
   }
-  .author-bar {
-    display: flex; align-items: center; gap: 15px; padding: 10px;
-    .author-icon { font-size: 28px; color: #e2e8f0; }
-    .author-list { color: #475569; font-weight: 500; font-size: 16px; }
+
+  .article-actions {
+    display: flex;
+    justify-content: center;
+    gap: $spacing-lg;
+    margin-bottom: $spacing-xl;
+
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: $spacing-sm;
+      padding: $spacing-sm $spacing-xl;
+      border: none;
+      border-radius: 20px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+
+      &.like {
+        background: var(--hover-bg);
+        color: var(--text-secondary);
+
+        &.active {
+          background: $primary;
+          color: white;
+        }
+
+        &:hover {
+          transform: scale(1.05);
+        }
+      }
+
+      &.share {
+        background: $primary;
+        color: white;
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba($primary, 0.2);
+        }
+      }
+    }
+
+    :deep(.share-dropdown) {
+      position: relative;
+
+      .share-menu {
+        position: absolute;
+        bottom: calc(100% + 8px);
+        right: 0;
+        background: var(--card-bg);
+        border-radius: $border-radius-lg;
+        box-shadow: $shadow-lg;
+        padding: $spacing-xs;
+        min-width: 180px;
+        z-index: 100;
+        border: 1px solid var(--border-color);
+        transform-origin: bottom right;
+        animation: shareMenuIn 0.2s ease;
+
+        &::before {
+          content: '';
+          position: absolute;
+          bottom: -5px;
+          right: 20px;
+          width: 10px;
+          height: 10px;
+          background: var(--card-bg);
+          border-left: 1px solid var(--border-color);
+          border-top: 1px solid var(--border-color);
+          transform: rotate(225deg);
+        }
+
+        .share-item {
+          width: 100%;
+          padding: $spacing-sm $spacing-lg;
+          border: none;
+          background: none;
+          color: var(--text-secondary);
+          font-size: 0.95em;
+          display: flex;
+          align-items: center;
+          gap: $spacing-md;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          border-radius: $border-radius-sm;
+
+          i {
+            width: 16px;
+            text-align: center;
+            font-size: 1.1em;
+
+            &.fa-qq {
+              color: #12B7F5;
+            }
+
+            &.fa-star {
+              color: #FFD700;
+            }
+
+            &.fa-weibo {
+              color: #E6162D;
+            }
+
+            &.fa-weixin {
+              color: #07C160;
+            }
+
+            &.fa-link {
+              color: $primary;
+            }
+          }
+
+          &:hover {
+            background: var(--hover-bg);
+            padding-left: $spacing-xl;
+          }
+
+          &:active {
+            transform: scale(0.95);
+          }
+        }
+      }
+    }
   }
 }
 
-// 标签样式
-.science-tag {
-  background: rgba($pds-blue, 0.08);
-  color: $pds-blue;
-  border: 1px solid rgba($pds-blue, 0.2);
-  padding: 4px 16px;
-  border-radius: 20px;
-  font-size: 13px;
-  margin-right: 10px;
+.article-sidebar {
+  .toc-container {
+    position: sticky;
+    top: 90px;
+    background: var(--card-bg);
+    border-radius: $border-radius-lg;
+    box-shadow: $shadow-md;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid var(--border-color);
+    backdrop-filter: blur(10px);
+    
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(45deg, transparent, rgba($primary, 0.03), transparent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+
+    .toc-header {
+      padding: $spacing-lg;
+      background: var(--hover-bg);
+      color: var(--text-primary);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+      position: relative;
+      border-bottom: 1px solid var(--border-color);
+      justify-content: space-between;
+      
+      .title-wrapper {
+        display: flex;
+        align-items: center;
+        gap: $spacing-sm;
+
+        i {
+          color: $primary;
+          font-size: 1.1em;
+          transform-origin: center;
+        }
+      }
+
+      .progress-wrapper {
+        font-size: 0.9em;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: $spacing-xs;
+        padding: 4px 8px;
+        background: rgba($primary, 0.05);
+        border-radius: $border-radius-lg;
+        transition: all 0.3s ease;
+
+        i {
+          color: $primary;
+          font-size: 0.9em;
+        }
+
+        .progress-text {
+          font-variant-numeric: tabular-nums;
+          min-width: 3em;
+          text-align: right;
+          
+          &::after {
+            content: '%';
+            margin-left: 2px;
+            opacity: 0.7;
+          }
+        }
+      }
+    }
+
+    .toc-content {
+      padding: $spacing-lg;
+      max-height: calc(100vh - 200px);
+      overflow-y: auto;
+      position: relative;
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: 24px;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: linear-gradient(
+          to bottom,
+          transparent,
+          rgba($primary, 0.1),
+          rgba($primary, 0.1),
+          transparent
+        );
+      }
+
+      .toc-item {
+        padding: $spacing-sm $spacing-md;
+        margin: 2px 0;
+        cursor: pointer;
+        border-radius: $border-radius-sm;
+        color: var(--text-secondary);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        font-size: 0.95em;
+        line-height: 1.4;
+        position: relative;
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        padding-left: 16px;
+
+        &::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 0;
+          height: 0;
+          background: $primary;
+          border-radius: 50%;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          opacity: 0;
+          box-shadow: 0 0 4px rgba($primary, 0.4);
+        }
+
+        &:hover {
+          color: $primary;
+          background: linear-gradient(90deg,
+            rgba($primary, 0.05),
+            rgba($primary, 0.02)
+          );
+          padding-left: 20px;
+
+          &::before {
+            width: 6px;
+            height: 6px;
+            opacity: 1;
+          }
+        }
+
+        &.active {
+          color: $primary;
+          background: linear-gradient(90deg,
+            rgba($primary, 0.1),
+            rgba($primary, 0.05)
+          );
+          font-weight: 500;
+          padding-left: 20px;
+
+          &::before {
+            width: 6px;
+            height: 6px;
+            opacity: 1;
+            animation: tocDotPulse 1.5s infinite;
+          }
+        }
+
+        &.level-1 {
+          font-weight: 500;
+          font-size: 1em;
+        }
+
+        &.level-2 {
+          font-size: 0.95em;
+        }
+
+        &.level-3 {
+          font-size: 0.9em;
+        }
+
+        &.level-4 {
+          font-size: 0.88em;
+        }
+
+        &.level-5, &.level-6 {
+          font-size: 0.86em;
+          opacity: 0.8;
+          
+          &:hover {
+            opacity: 1;
+          }
+        }
+      }
+    }
+  }
 }
 
-// meta 区域间距
-.meta-grid {
+
+@keyframes tocDotPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba($primary, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 4px rgba($primary, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba($primary, 0);
+  }
+}
+
+@keyframes shareMenuIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.desktop-only {
+  @include responsive(lg) {
+    display: none;
+  }
+}
+
+.floating-action-bar {
+  position: fixed;
+  top: 40%;
+  transform: translateY(-50%);
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: $spacing-md * 1.5;
+  padding: $spacing-sm;
+  border-radius: $border-radius-lg;
+  z-index: 100;
+  transition: left 0.3s ease;
+
+  @include responsive(lg) {
+    display: none;
+  }
+
+  .action-item {
+    cursor: pointer;
+    .action-button {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: var(--card-bg);
+      transition: all 0.3s ease;
+
+      i {
+        font-size: 1.2em;
+        color: var(--text-secondary);
+        transition: all 0.3s ease;
+
+        &.active {
+          color: $primary;
+        }
+      }
+    }
+
+    .action-count {
+      font-size: 0.8em;
+      color: var(--text-secondary);
+      min-width: 20px;
+      text-align: center;
+    }
+
+    &:hover {
+      .action-button {
+        background: rgba($primary, 0.1);
+        transform: translateY(-2px);
+
+        i {
+          color: $primary;
+          transform: scale(1.1);
+        }
+      }
+    }
+  }
+
+  .reward-item {
+    position: relative;
+
+    .reward-popup {
+      position: absolute;
+      left: calc(100% + 16px);
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--card-bg);
+      border-radius: $border-radius-lg;
+      padding: $spacing-md;
+      box-shadow: $shadow-lg;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      pointer-events: none;
+      width: 510px;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        left: -6px;
+        top: 50%;
+        transform: translateY(-50%) rotate(45deg);
+        width: 12px;
+        height: 12px;
+        background: var(--card-bg);
+        border-radius: 2px;
+      }
+
+      .reward-content {
+        display: flex;
+        gap: $spacing-md;
+        margin-bottom: $spacing-sm;
+
+        .reward-qr {
+          width: 250px;
+          height: 250px;
+          border-radius: $border-radius-sm;
+          object-fit: cover;
+        }
+      }
+
+      .reward-text {
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 0.9em;
+      }
+    }
+
+    &:hover {
+      .reward-popup {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transform: translateY(-50%) translateX(8px);
+      }
+    }
+  }
 }
 
-.meta-cell {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  .label {
-    font-weight: bold;
-    color: #64748b;
-    margin-right: 12px;
-  }
-  .subject-val {
-    color: $pds-dark;
-    font-weight: 600;
-  }
-}
-
-// 下载列表样式
-.file-table-container {
-  border: 1px solid $pds-border;
-  border-radius: 12px;
+.ai-description {
+  margin: $spacing-md $spacing-xl;
+  border-radius: $border-radius-lg;
+  background-image: linear-gradient(180deg, rgba(247, 232, 255, .54), rgba(191, 223, 255, .35));
+  border: 1px solid rgba(0, 150, 136, 0.1);
+  transition: all 0.3s ease;
   overflow: hidden;
-  .table-header {
-    background: #f8fafc; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center;
-    .search-box {
-      display: flex; align-items: center; background: white; border: 1px solid #cbd5e1; padding: 5px 15px; border-radius: 6px;
-      input { border: none; outline: none; margin-left: 10px; width: 250px; font-size: 14px; }
+
+  @include responsive(sm) {
+    margin: $spacing-sm;
+  }
+  
+
+
+  .ai-header {
+    padding: $spacing-sm $spacing-md;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    justify-content: flex-start;
+    color: #a855f7;
+    cursor: pointer;
+
+    i {
+      font-size: 1.1em;
     }
-    .header-actions i { margin-left: 20px; cursor: pointer; color: #64748b; &:hover { color: $pds-blue; } }
   }
-  .file-row {
-    display: flex; align-items: center; padding: 25px; border-top: 1px solid #f1f5f9;
-    .file-type-icon { font-size: 35px; color: #94a3b8; margin-right: 25px; }
-    .file-info {
-      flex: 1;
-      .filename { font-weight: 700; color: $pds-dark; font-size: 16px; margin-bottom: 5px; }
-      .file-meta { font-size: 12px; color: #94a3b8; }
-    }
-  }
-}
 
-// 引用组件
-.citation-container {
-  background: #f8fafc; padding: 25px; border-radius: 10px;
-  .citation-body {
-    background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-top: 15px; position: relative;
-    .cite-text { line-height: 1.8; color: #334155; font-size: 15px; padding-right: 100px; }
-    .copy-btn { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); background: $pds-blue; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; }
+  .ai-content {
+    padding: $spacing-md;
+    overflow: hidden;
+  }
+  .ai-description-text {
+    margin-top: $spacing-sm;
+    color: #8c8a8e;
   }
 }
 
-// 图表展示区
-.stats-overview {
-  display: flex; gap: 40px; margin-bottom: 40px;
-  .stat-box {
-    display: flex; flex-direction: column;
-    .num { font-size: 36px; font-weight: 900; color: $pds-blue; font-family: 'Arial Black', sans-serif; }
-    .lab { font-size: 12px; color: #94a3b8; }
-  }
-}
-.charts-layout {
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
-  .chart-block {
-    background: white; border: 1px solid #f1f5f9; border-radius: 12px; padding: 25px;
-    width: 100%; box-sizing: border-box;
-  }
-  .chart-subtitle { font-size: 15px; color: #475569; margin-bottom: 15px; font-weight: 600; }
-  .echart-box { width: 100%; height: 400px; }
+.expand-enter-active,
+.expand-leave-active {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
 }
 
-// ================= 右侧样式 =================
-.sidebar-content { display: flex; flex-direction: column; gap: 25px; }
-
-// 作者卡片样式
-.author-info-card {
-  background: white; padding: 25px; border-radius: 16px; border: 1px solid $pds-border;
-  display: flex; flex-direction: column; align-items: center; gap: 15px;
-  .author-name-tag { font-weight: 800; color: $pds-dark; font-size: 16px; }
-  .follow-btn-main {
-    width: 100%; padding: 10px; border-radius: 30px; border: 1px solid $pds-blue;
-    background: white; color: $pds-blue; font-weight: bold; cursor: pointer; transition: 0.3s;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    &:hover { background: rgba($pds-blue, 0.05); }
-    &.followed { background: #f1f5f9; border-color: #cbd5e1; color: #64748b; }
-  }
+.expand-enter-from,
+.expand-leave-to {
+  opacity: 0;
+  height: 0;
 }
 
-.side-action-card {
-  display: flex; justify-content: space-around; background: white; padding: 25px; border-radius: 16px; border: 1px solid $pds-border;
-  .action-btn-item {
-    display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; transition: 0.3s;
-    i { font-size: 24px; color: #cbd5e1; transition: all 0.3s ease; }
-    i.fa-thumbs-up.active { color: #f97316; transform: scale(1.2); }
-    i.fa-star.active { color: #f59e0b; transform: scale(1.2); }
-    span { font-size: 13px; color: #64748b; font-weight: 600; margin-top: 5px; }
-    &:hover i { transform: scale(1.2); color: $pds-blue; }
-  }
+.expand-enter-to,
+.expand-leave-from {
+  opacity: 1;
 }
 
-.link-card {
-  background: white; padding: 25px; border-radius: 16px; border: 1px solid $pds-border;
-  .card-label { font-size: 16px; font-weight: 800; color: $pds-dark; margin-bottom: 15px; }
-  .card-link {
-    display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; background: #f0f9ff; border-radius: 10px;
-    text-decoration: none; color: #0369a1; font-weight: 600; font-size: 14px;
-    i { font-size: 12px; }
-    &:hover { background: $pds-blue; color: white; }
-    &.special { background: #fff7ed; color: #c2410c; &:hover { background: #f97316; color: white; } }
-  }
-}
-
-.journal-item {
-  display: flex; gap: 15px; background: #f8fafc; padding: 15px; border-radius: 10px; cursor: pointer; transition: 0.3s;
-  img { width: 60px; height: 80px; object-fit: cover; border-radius: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-  .j-title { font-size: 13px; font-weight: 700; line-height: 1.4; margin-bottom: 8px; }
-  .j-doi { font-size: 11px; color: $pds-blue; font-family: monospace; }
-  &:hover { background: #e0f2fe; }
-}
-
-.rec-item {
-  padding: 15px 0; border-bottom: 1px solid #f1f5f9; cursor: pointer;
-  &:last-child { border: none; }
-  .rec-title { font-size: 14px; font-weight: 600; margin-bottom: 8px; &:hover { color: $pds-blue; } }
-  .rec-meta { font-size: 12px; color: #94a3b8; }
-}
-
-// 底部细节导航
-.floating-nav-bar {
-  position: fixed; bottom: 35px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.9);
-  backdrop-filter: blur(15px); padding: 10px 30px; border-radius: 50px; box-shadow: 0 15px 40px rgba(0,0,0,0.15); border: 1px solid $pds-border; z-index: 1000;
-  .nav-wrapper {
-    display: flex; align-items: center; gap: 15px;
-    .nav-title { font-weight: 800; color: #94a3b8; font-size: 12px; margin-right: 10px; }
-    .nav-link { text-decoration: none; color: #475569; font-size: 14px; font-weight: 600; padding: 8px 18px; border-radius: 30px; &:hover { background: $pds-blue; color: white; } }
-    .nav-btn-repo { background: $pds-dark; color: white; border: none; padding: 10px 20px; border-radius: 30px; cursor: pointer; font-size: 14px; }
-  }
-}
 </style>

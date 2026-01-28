@@ -13,7 +13,9 @@ import Photos from '@/views/photos/index.vue'
 import store from '@/store';
 
 Vue.use(VueRouter)
+
 const routes = [
+
     {
         path: "/",
         component: Layout,
@@ -93,28 +95,26 @@ const routes = [
                     hidden: true
                 }
               },
-            // 工具初始页路由
-            {
-                path: '/utility',
-                name: 'Utility',
-                component: () => import(/* webpackPrefetch: true */ '@/views/utility/index.vue'),
-                meta: {
-                    transition: 'fade',
-                    title: '数据检索工具 - 拾壹博客',
-                    icon: 'fas fa-fire'
-                }
-            },
-            // 工具详情页路由
-            {
-                path: '/utility/detail',
-                name: 'ToolDetail',
-                component: () => import('@/views/utility/detail/index.vue'),
-                meta: {
-                    transition: 'fade',
-                    title: '工具详情 - 拾壹博客',
-                    icon: 'fas fa-fire'
-                }
-            },
+          {
+            path: '/utility',
+            name: 'utility',
+            component: () => import('@/views/utility/index.vue'),
+            meta: {
+              transition: 'fade',
+              title: '数据检索工具 - 拾壹博客',
+              icon: 'fas fa-fire'
+            }
+          },
+          // 新增：工具详情页路由
+          {
+            path: '/utility/detail',
+            name: 'ToolDetail',
+            component: () => import('@/views/utility/detail/index.vue'),
+            meta: {
+              transition: 'fade',
+              title: '工具详情 - 拾壹博客'
+            }
+          },
               {
                 path: '/infrastructure',
                 name: 'Infrastructure',
@@ -124,17 +124,8 @@ const routes = [
                   icon: 'fas fa-cloud-download-alt'
 
                 }
-            },
-            {
-                path: '/scientific-data',
-                name: 'ScientificData',
-                component: () => import('@/views/scientific-data/index.vue'),
-                meta: {
-                    title: '科学数据 ',
-                    icon: 'fas fa-database'
-                }
-            },
-            {
+              },
+              {
                 path: '/messages',
                 name: 'Messages',
                 component: Messages,
