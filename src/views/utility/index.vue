@@ -1,7 +1,7 @@
 <template>
   <div class="utility-page">
     <div class="page-header">
-      <h1 class="main-title">数据检索工具</h1>
+      <h1 class="main-title">数据挖掘工具</h1>
       <div class="title-line"></div>
       <p class="page-desc">整合行星探测数据处理工具，提供专业分析能力，助力行星科学研究</p>
     </div>
@@ -59,7 +59,7 @@ export default {
           imageUrl: '/src/assets/toolimgs/tool2.png',
           intro: '利用光谱数据反演行星表面物质成分，支持月球与火星多区域数据解析',
           detailIntro: '本工具通过集成自研算法和多种成熟反演方法，构建了月球、火星物质成分反演算法体系，支持多种载荷数据作为输入，对月球和火星表面的物质成分进行反演。基于LSCC提供的Apollo和我国嫦娥五号样品成分信息，结合实验室矿物混合光谱真值，构建了月球主要造岩矿物的定量反演模型，可将月球M3光谱数据作为输入，对月表典型区域的高钙辉石、低钙辉石和橄榄石及其含量进行定量反演；使用Apollo、LUNA和嫦娥系列采样点成分信息作为真值，采用PLS算法构建了月表典型地区Fe、Ti元素含量的反演模型，并能分析其空间分布特征。',
-          downloadUrl: 'test.zip'
+          //downloadUrl: 'test.zip'
         },
         {
           id: 3,
@@ -122,7 +122,7 @@ export default {
 </script>
 
 <style scoped>
-/* 样式部分完全不变，复制你原来的即可 */
+/* 样式部分 */
 .utility-page {
   max-width: 1400px;
   margin: 0 auto;

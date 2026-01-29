@@ -91,7 +91,7 @@ const routes = [
             component: () => import('@/views/utility/index.vue'),
             meta: {
               transition: 'fade',
-              title: '数据检索工具 - 拾壹博客',
+              title: '数据挖掘工具 - 拾壹博客',
               icon: 'fas fa-fire'
             }
           },
