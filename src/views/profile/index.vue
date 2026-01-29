@@ -24,9 +24,9 @@
         <el-card shadow="never" class="content-tabs-card">
           <el-tabs v-model="currentTab" class="main-tabs">
 
-            <!-- 我的话题 -->
+            <!-- 我的发布 -->
             <el-tab-pane name="topics">
-              <span slot="label"><i class="el-icon-chat-dot-round"></i> 我的话题</span>
+              <span slot="label"><i class="el-icon-chat-dot-round"></i> 我的发布</span>
               <div class="tab-body">
                 <div class="action-bar">
                   <el-input v-model="params.title" size="mini" placeholder="搜索话题标题..." style="width: 250px; margin-right: 10px"></el-input>

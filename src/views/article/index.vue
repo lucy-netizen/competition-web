@@ -23,7 +23,7 @@
           <h1 class="data-title">
             {{ article.title }}
             <el-tooltip content="跳转至原始资源" placement="top">
-              <i class="fas fa-external-link-alt" @click="openExternal(article.originalUrl)"></i>
+              <i class="fas fa-external-link-alt" @click="openExternal(article.originalUrl || article.downloadUrl)"></i>
             </el-tooltip>
           </h1>
 
@@ -41,13 +41,19 @@
             </div>
           </div>
 
-          <!-- 作者列表：动态解析字符串 -->
+          <!-- 作者列表：分开展示逻辑 -->
           <div class="author-bar">
             <div class="author-icon"><i class="fas fa-user-graduate"></i></div>
             <div class="author-list">
-              <span v-for="(name, index) in authors" :key="index" class="author-name">
-                {{ name }}{{ index < authors.length - 1 ? '；' : '' }}
-              </span>
+              <el-tag
+                  v-for="(name, index) in authors"
+                  :key="index"
+                  size="medium"
+                  effect="plain"
+                  class="author-tag"
+              >
+                {{ name }}
+              </el-tag>
             </div>
           </div>
         </header>
@@ -56,7 +62,6 @@
         <section id="description" class="section-card">
           <h2 class="section-title">数据摘要 / Description</h2>
           <div class="description-content">
-            <!-- 优先显示后端数据，若没有则显示行星背景占位 -->
             <div v-if="article.description" class="rich-text" v-html="article.description"></div>
             <div v-else class="placeholder-text">
               本数据集记录了行星探测任务中的关键科学观测数据。包含多光谱影像、雷达回波、以及化学元素反演结果。
@@ -81,7 +86,7 @@
           </div>
         </section>
 
-        <!-- 3. 数据实体下载 (100% 交互) -->
+        <!-- 3. 数据实体下载 (逻辑修正：对接数据库 download_url) -->
         <section id="download" class="section-card">
           <h2 class="section-title">数据实体与下载 / Download</h2>
           <div class="file-table-container">
@@ -99,16 +104,22 @@
               <div class="file-row">
                 <div class="file-type-icon"><i class="fas fa-file-archive"></i></div>
                 <div class="file-info">
-                  <div class="filename">PDS_DATA_EXPLORATION_V1.zip</div>
+                  <!-- 显示数据集标题作为下载名称 -->
+                  <div class="filename">{{ article.title || 'PDS_DATA_SET' }}.zip</div>
                   <div class="file-meta">
-                    <span class="size">35.93 KB</span>
+                    <span class="size">科学数据包</span>
                     <span class="dot">·</span>
-                    <span class="md5">MD5: f9e8d...</span>
+                    <span class="md5">源地址: {{ article.downloadUrl ? '已挂载' : '未挂载' }}</span>
                   </div>
                 </div>
                 <div class="file-actions">
-                  <el-button type="primary" size="small" icon="el-icon-download" @click="handleDownload">
-                    下载数据包
+                  <el-button
+                      :type="article.downloadUrl ? 'primary' : 'info'"
+                      size="small"
+                      icon="el-icon-download"
+                      @click="handleDownload"
+                  >
+                    {{ article.downloadUrl ? '下载数据包' : '暂无下载链接' }}
                   </el-button>
                 </div>
               </div>
@@ -116,7 +127,7 @@
           </div>
         </section>
 
-        <!-- 4. 动态引用生成 (逻辑增强) -->
+        <!-- 4. 动态引用生成 -->
         <section id="cite" class="section-card">
           <h2 class="section-title">引用本数据 / Cite This Dataset</h2>
           <div class="citation-container">
@@ -128,7 +139,6 @@
               </el-radio-group>
             </div>
             <div class="citation-body">
-              <p class="cite-text">{{ dynamicCitation }}</p>
               <p class="cite-text">{{ dynamicCitation }}</p>
               <button class="copy-btn" @click="copyText(dynamicCitation)">
                 <i class="far fa-copy"></i> 复制引用
@@ -170,21 +180,17 @@
 
       <!-- ================= 右侧侧边栏 (链接卡片) ================= -->
       <aside class="sidebar-content">
-        <!-- ★★★ 核心升级：真·动态作者关注卡片 ★★★ -->
         <div class="author-info-card">
           <div class="avatar-wrap">
-            <!-- 逻辑：优先取后端返回的作者真实头像，没有则用默认图 -->
-            <el-avatar :size="70" :src="article.avatar || 'https://img.shiyit.com/base/avatar.png'"></el-avatar>
+            <el-avatar :size="70" :src="formatAvatar(article.authorAvatar || article.avatar)"></el-avatar>
           </div>
-          <!-- 逻辑：优先取后端返回的作者真实昵称，没有则取计算属性 authors 的第一个值 -->
-          <div class="author-name-tag">{{ article.nickname || authors[0] }}</div>
+          <div class="author-name-tag">{{ article.authorNickname || article.nickname || authors[0] }}</div>
           <button class="follow-btn-main" :class="{ followed: isFollowed }" @click="handleFollow">
             <i :class="isFollowed ? 'el-icon-check' : 'el-icon-plus'"></i>
             {{ isFollowed ? '已关注作者' : '关注作者' }}
           </button>
         </div>
 
-        <!-- 侧边操作栏：已激活交互 -->
         <div class="side-action-card">
           <div class="action-btn-item" @click="handleLike">
             <i class="fas fa-thumbs-up" :class="{ active: article.isLike }"></i>
@@ -200,15 +206,13 @@
           </div>
         </div>
 
-        <!-- 1. 数据集来源 (打通链接) -->
         <div class="link-card">
           <h4 class="card-label">本数据集由</h4>
-          <a :href="article.originalUrl || 'https://pds.wh.sdu.edu.cn/'" target="_blank" class="card-link">
+          <a :href="article.originalUrl || article.downloadUrl || 'https://pds.wh.sdu.edu.cn/'" target="_blank" class="card-link">
             《行星数据发布系统 (PDS)》 <i class="fas fa-link"></i>
           </a>
         </div>
 
-        <!-- 2. 纳入计划 (打通链接) -->
         <div class="link-card">
           <h4 class="card-label">该数据集已被纳入</h4>
           <a href="https://moon.bao.ac.cn/" target="_blank" class="card-link special">
@@ -216,24 +220,22 @@
           </a>
         </div>
 
-        <!-- 3. 关联论文 (DOI逻辑) -->
         <div class="link-card journal-card">
           <h4 class="card-label">关联论文 / 补充</h4>
-          <div class="journal-item" @click="openExternal(article.originalUrl)">
+          <div class="journal-item" @click="openExternal('https://geochemistry.cug.edu.cn/info/1014/1857.htm')">
             <img src="https://img.shiyit.com/base/mojian/planetary-journal.png" alt="cover">
             <div class="j-info">
-              <div class="j-title">Nature Astronomy: 月球晚期火山活动数据集分析报告</div>
-              <div class="j-doi">DOI: {{ article.doi || '10.1038/s41550' }}</div>
+              <div class="j-title">嫦娥五号着陆区月表物质成分分析报告</div>
+              <div class="j-doi">来源：中国地质大学（武汉）地球化学</div>
             </div>
           </div>
         </div>
 
-        <!-- 4. 推荐数据集 (逻辑跳转) -->
         <div class="link-card recommend-card">
           <h4 class="card-label">推荐数据集</h4>
-          <div v-for="i in 3" :key="i" class="rec-item" @click="handleRecJump(i)">
-            <p class="rec-title">基于深度学习的行星{{ i === 1 ? '表面' : '大气' }}健康指标监测...</p>
-            <p class="rec-meta">数据集; 科学研究; 行星探测</p>
+          <div v-for="(rec, index) in recommendations" :key="index" class="rec-item" @click="openExternal(rec.url)">
+            <p class="rec-title">{{ rec.title }}</p>
+            <p class="rec-meta">数据集; 科学研究; {{ rec.subject }}</p>
           </div>
         </div>
       </aside>
@@ -247,7 +249,7 @@
         <a href="#download" class="nav-link">下载</a>
         <a href="#cite" class="nav-link">引用</a>
         <a href="#statistics" class="nav-link">统计</a>
-        <button class="nav-btn-repo" @click="openExternal('https://pds.wh.sdu.edu.cn/')">
+        <button class="nav-btn-repo" @click="openExternal(article.originalUrl || article.downloadUrl || 'https://pds.wh.sdu.edu.cn/')">
           前往仓库 <i class="fas fa-database"></i>
         </button>
       </div>
@@ -258,6 +260,8 @@
 <script>
 import * as echarts from 'echarts';
 import { getArticleDetailApi, likeArticleApi } from '@/api/article'
+import { getDatasetDetailApi } from '@/api/article'
+import { getUserInfoApi } from '@/api/user'
 
 export default {
   name: 'PlanetaryDataDetail',
@@ -266,26 +270,34 @@ export default {
       article: {
         category: {}
       },
+      userInfo: {},
       loading: false,
-      isFollowed: false, // 关注状态（活的）
+      isFollowed: false,
       fileQuery: '',
       citeType: 'GB/T 7714',
       barChart: null,
       mapChart: null,
+      recommendations: [
+        { title: '国家空间科学数据中心 (NSSDC)', subject: '空间科学核心库', url: 'https://www.nssdc.ac.cn/' },
+        { title: 'ESA PSA (欧洲航天局行星档案)', subject: 'ESA数据集', url: 'https://archives.esac.esa.int/psa/' },
+        { title: 'Nature Scientific Data (行星类)', subject: '顶级数据论文', url: 'https://www.nature.com/sdata/' },
+        { title: 'Zenodo (Open Science 数据集)', subject: '开放科学资源', url: 'https://zenodo.org/' }
+      ]
     }
   },
   computed: {
-    // 动态作者
+    // 动态作者分开显示逻辑
     authors() {
-      if (!this.article.author) return ['行星科学研究团队'];
-      return this.article.author.split(/[,，]/).map(s => s.trim());
+      if (!this.article.author) return ['空间科学中心'];
+      // 按照中英文逗号、分号进行切分
+      return this.article.author.split(/[,，;；]/).map(s => s.trim()).filter(s => s);
     },
     // 动态关键词
     keywords() {
       if (!this.article.keywords) return ['月球', '火星', '深空探测'];
       return this.article.keywords.split(/[,，]/).map(s => s.trim());
     },
-    // 动态引用生成逻辑 (修复写死问题)
+    // 动态引用生成
     dynamicCitation() {
       const year = new Date().getFullYear();
       const title = this.article.title || '行星数据集';
@@ -300,27 +312,46 @@ export default {
     }
   },
   methods: {
+    formatAvatar(url) {
+      if (!url) return 'https://img.shiyit.com/base/avatar.png';
+      if (url.startsWith('http')) return url;
+      return process.env.VUE_APP_BASE_API + url;
+    },
     async fetchDetail() {
       this.loading = true;
+      const id = this.$route.params.id;
       try {
-        const res = await getArticleDetailApi(this.$route.params.id);
+        getUserInfoApi().then(res => {
+          if (res.data && res.data.sysUser) {
+            this.userInfo = res.data.sysUser;
+          }
+        }).catch(() => {});
+
+        let res = await getDatasetDetailApi(id).catch(() => null);
+        if (!res || !res.data) {
+          res = await getArticleDetailApi(id);
+        }
         this.article = res.data;
-        // 等待 DOM 渲染后初始化图表
+
         this.$nextTick(() => {
           this.initBarChart();
           this.initMapChart();
         });
       } catch (err) {
-        this.$message.error('获取科学数据详情失败');
+        this.$message.error('数据加载失败');
+        this.$nextTick(() => {
+          this.initBarChart();
+          this.initMapChart();
+        });
       } finally {
         this.loading = false;
       }
     },
 
-    // 修正月份乱码问题：重新手打纯净字符
     initBarChart() {
       const dom = this.$refs.barChart;
       if (!dom) return;
+      if (this.barChart) this.barChart.dispose();
       this.barChart = echarts.init(dom);
       this.barChart.setOption({
         tooltip: { trigger: 'axis' },
@@ -344,10 +375,10 @@ export default {
       });
     },
 
-    // 2. 核心：世界地图 (fetch加载版)
     async initMapChart() {
       const dom = this.$refs.mapChart;
       if (!dom) return;
+      if (this.mapChart) this.mapChart.dispose();
       this.mapChart = echarts.init(dom);
       try {
         const response = await fetch('https://cdn.jsdelivr.net/npm/echarts@4.9.0/map/json/world.json');
@@ -379,21 +410,25 @@ export default {
       }
     },
 
-    // 复制功能
     copyText(text) {
       if (!text) return;
       navigator.clipboard.writeText(text);
       this.$message.success('已复制到剪贴板');
     },
 
-    // 下载功能
+    // 核心改进：处理下载逻辑
     handleDownload() {
-      const fileUrl = this.article.fileUrl || this.article.originalUrl;
+      // 优先从 article.downloadUrl (对应数据库 download_url) 取值
+      const fileUrl = this.article.downloadUrl || this.article.fileUrl || this.article.originalUrl;
       if (fileUrl) {
+        // 使用 window.open 打开链接，如果是文件则下载，如果是外部页面则跳转
         window.open(fileUrl, '_blank');
-        this.$message.success('已发起下载请求');
+        this.$message({
+          message: '正在前往数据资源地址...',
+          type: 'success'
+        });
       } else {
-        this.$message.warning('该数据集暂未挂载物理文件');
+        this.$message.warning('该数据集暂未挂载外部下载链接或物理文件');
       }
     },
 
@@ -402,11 +437,6 @@ export default {
       else this.$message.info('暂无外部链接');
     },
 
-    handleRecJump(id) {
-      this.$message.info('该文章暂不存在');
-    },
-
-    // 新增：关注逻辑
     handleFollow() {
       this.isFollowed = !this.isFollowed;
       if (this.isFollowed) {
@@ -416,7 +446,6 @@ export default {
       }
     },
 
-    // 前端点赞逻辑
     handleLike() {
       this.$set(this.article, 'isLike', !this.article.isLike);
       if (this.article.isLike) {
@@ -428,7 +457,6 @@ export default {
       }
     },
 
-    // 前端收藏逻辑
     handleFav() {
       this.$set(this.article, 'isFavorite', !this.article.isFavorite);
       if (this.article.isFavorite) {
@@ -451,7 +479,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-// 定义行星科学专用配色
 $pds-dark: #0c4a6e;
 $pds-blue: #0ea5e9;
 $pds-bg: #f8fafc;
@@ -465,7 +492,6 @@ $pds-border: #e2e8f0;
   min-height: 100vh;
 }
 
-// 顶部导航样式
 .breadcrumb-container {
   display: flex;
   justify-content: space-between;
@@ -487,7 +513,6 @@ $pds-border: #e2e8f0;
   @media (max-width: 1100px) { grid-template-columns: 1fr; }
 }
 
-// 卡片通用样式
 .section-card {
   background: white;
   padding: 35px;
@@ -508,7 +533,6 @@ $pds-border: #e2e8f0;
   }
 }
 
-// 标题头样式
 .article-header {
   margin-bottom: 35px;
   .data-title {
@@ -530,11 +554,13 @@ $pds-border: #e2e8f0;
   .author-bar {
     display: flex; align-items: center; gap: 15px; padding: 10px;
     .author-icon { font-size: 28px; color: #e2e8f0; }
-    .author-list { color: #475569; font-weight: 500; font-size: 16px; }
+    .author-list {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      .author-tag { border-radius: 4px; font-weight: 600; color: #475569; }
+    }
   }
 }
 
-// 标签样式
 .science-tag {
   background: rgba($pds-blue, 0.08);
   color: $pds-blue;
@@ -545,29 +571,14 @@ $pds-border: #e2e8f0;
   margin-right: 10px;
 }
 
-// meta 区域间距
-.meta-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-}
+.meta-grid { display: flex; flex-direction: column; gap: 22px; }
 
 .meta-cell {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  .label {
-    font-weight: bold;
-    color: #64748b;
-    margin-right: 12px;
-  }
-  .subject-val {
-    color: $pds-dark;
-    font-weight: 600;
-  }
+  display: flex; align-items: center; flex-wrap: wrap;
+  .label { font-weight: bold; color: #64748b; margin-right: 12px; }
+  .subject-val { color: $pds-dark; font-weight: 600; }
 }
 
-// 下载列表样式
 .file-table-container {
   border: 1px solid $pds-border;
   border-radius: 12px;
@@ -591,7 +602,6 @@ $pds-border: #e2e8f0;
   }
 }
 
-// 引用组件
 .citation-container {
   background: #f8fafc; padding: 25px; border-radius: 10px;
   .citation-body {
@@ -601,7 +611,6 @@ $pds-border: #e2e8f0;
   }
 }
 
-// 图表展示区
 .stats-overview {
   display: flex; gap: 40px; margin-bottom: 40px;
   .stat-box {
@@ -611,21 +620,14 @@ $pds-border: #e2e8f0;
   }
 }
 .charts-layout {
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
-  .chart-block {
-    background: white; border: 1px solid #f1f5f9; border-radius: 12px; padding: 25px;
-    width: 100%; box-sizing: border-box;
-  }
+  display: flex; flex-direction: column; gap: 30px;
+  .chart-block { background: white; border: 1px solid #f1f5f9; border-radius: 12px; padding: 25px; width: 100%; box-sizing: border-box; }
   .chart-subtitle { font-size: 15px; color: #475569; margin-bottom: 15px; font-weight: 600; }
   .echart-box { width: 100%; height: 400px; }
 }
 
-// ================= 右侧样式 =================
 .sidebar-content { display: flex; flex-direction: column; gap: 25px; }
 
-// 作者卡片样式
 .author-info-card {
   background: white; padding: 25px; border-radius: 16px; border: 1px solid $pds-border;
   display: flex; flex-direction: column; align-items: center; gap: 15px;
@@ -678,7 +680,6 @@ $pds-border: #e2e8f0;
   .rec-meta { font-size: 12px; color: #94a3b8; }
 }
 
-// 底部细节导航
 .floating-nav-bar {
   position: fixed; bottom: 35px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.9);
   backdrop-filter: blur(15px); padding: 10px 30px; border-radius: 50px; box-shadow: 0 15px 40px rgba(0,0,0,0.15); border: 1px solid $pds-border; z-index: 1000;

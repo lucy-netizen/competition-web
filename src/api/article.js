@@ -4,21 +4,21 @@ import request from '@/utils/request'
  * 获取文章详情
  */
 export function getArticleDetailApi(id) {
-  return request({
-    url: `/api/article/detail/${id}`,
-    method: 'get'
-  })
-} 
+    return request({
+        url: `/api/article/detail/${id}`,
+        method: 'get'
+    })
+}
 
 /**
  * 获取文章列表
  */
 export function getArticlesApi(params) {
-  return request({
-      url: '/api/article/list',
-      method: 'get',
-      params: params
-  })
+    return request({
+        url: '/api/article/list',
+        method: 'get',
+        params: params
+    })
 }
 
 /**
@@ -26,43 +26,41 @@ export function getArticlesApi(params) {
  */
 export function getCommentsApi(params) {
     return request({
-      url: `/api/comment/list`,
-      method: 'get',
-      params
+        url: `/api/comment/list`,
+        method: 'get',
+        params
     })
-} 
+}
 
 /**
  * 获取归档列表
  */
 export function getArchivesApi() {
-  return request({
-      url: '/api/article/archive',
-      method: 'get'
-  })
+    return request({
+        url: '/api/article/archive',
+        method: 'get'
+    })
 }
 
 /**
  * 获取分类
  */
 export function getCategoriesApi() {
-  return request({
-    url: '/api/article/categories',
-    method: 'get'
-  })
+    return request({
+        url: '/api/article/categories',
+        method: 'get'
+    })
 }
 
 /**
  * 获取所有分类
  */
 export function getAllCategoriesApi() {
-  return request({
-    url: '/api/article/categorie-all',
-    method: 'get'
-  })
+    return request({
+        url: '/api/article/categorie-all',
+        method: 'get'
+    })
 }
-
-
 
 /**
  * 添加评论
@@ -79,65 +77,65 @@ export function addCommentApi(data) {
  * 搜索文章
  */
 export function searchArticlesApi(keyword) {
-  return request({
-    url: '/api/article/search',
-    method: 'get',
-    params: {
-      keyword,
-      limit: 10
-    }
-  })
+    return request({
+        url: '/api/article/search',
+        method: 'get',
+        params: {
+            keyword,
+            limit: 10
+        }
+    })
 }
 
 /**
  * 获取轮播文章
  */
 export function getCarouselArticlesApi() {
-  return request({
-    url: '/api/article/getCarousels',
-    method: 'get',
-  })
+    return request({
+        url: '/api/article/getCarousels',
+        method: 'get',
+    })
 }
 
 /**
  * 获取推荐文章
  */
 export function getRecommendArticlesApi() {
-  return request({
-    url: '/api/article/getRecommends',
-    method: 'get',
-  })
+    return request({
+        url: '/api/article/getRecommends',
+        method: 'get',
+    })
 }
 
 /**
  * 点赞
  */
 export function likeArticleApi(id) {
-  return request({
-    url: `/api/article/like/${id}`,
-    method: 'get'
-  })
+    return request({
+        url: `/api/article/like/${id}`,
+        method: 'get'
+    })
 }
 
 /**
  * 获取的文章
  */
 export function getMyArticleApi(params) {
-  return request({
-      url: '/protal/user/myArticle',
-      method: 'get',
-      params
-  })
+    return request({
+        url: '/protal/user/myArticle',
+        method: 'get',
+        params
+    })
 }
 
 /**
  * 删除文章
  */
 export function delArticleApi(id) {
-  return request({
-      url: `/sys/article/delete/${id}`,
-      method: 'delete'
-  })
+    return request({
+        url: `/sys/article/delete/${id}`,
+        method: 'delete'
+    })
 }
 
 /**
@@ -145,21 +143,21 @@ export function delArticleApi(id) {
  * @param {Object} data 文章数据
  */
 export function createArticleApi(data) {
-  return request({
-    url: '/sys/article/add',
-    method: 'post',
-    data
-  })
+    return request({
+        url: '/sys/article/add',
+        method: 'post',
+        data
+    })
 }
 
 /**
  * 获取文章详情
  */
 export function getArticleInfoApi(id) {
-  return request({
-    url: `/sys/article/detail/${id}`,
-    method: 'get'
-  })
+    return request({
+        url: `/sys/article/detail/${id}`,
+        method: 'get'
+    })
 }
 
 /**
@@ -167,9 +165,17 @@ export function getArticleInfoApi(id) {
  * @param {Object} data 文章数据
  */
 export function updateArticleApi(data) {
-  return request({
-    url: `/sys/article/update`,
-    method: 'put',
-    data
-  })
+    return request({
+        url: `/sys/article/update`,
+        method: 'put',
+        data
+    })
+}
+
+// ★★★ 新增：获取科学数据集详情 (对应 DatasetFrontController) ★★★
+export function getDatasetDetailApi(id) {
+    return request({
+        url: `/api/front/dataset/get/${id}`,
+        method: 'get'
+    })
 }

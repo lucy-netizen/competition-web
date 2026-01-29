@@ -2,7 +2,8 @@
   <div class="dataset-list">
     <el-row :gutter="20">
       <el-col :span="24" v-for="item in datasetList" :key="item.id">
-        <el-card shadow="hover">
+        <!-- 重点：点击整个卡片跳转，并应用丝滑位移样式 -->
+        <el-card shadow="hover" class="clickable-card" @click.native="goToDetail(item.id)">
           <template #header>
             <div class="card-header">
               <span>{{ item.title }}</span>
@@ -14,7 +15,8 @@
           <el-row :gutter="16">
             <!-- 左边图片 -->
             <el-col :span="8">
-              <img :src="item.thumbnailUrl" class="thumbnail" />
+              <!-- 兼容数据库字段 thumbnail_url -->
+              <img :src="item.thumbnailUrl || item.thumbnail_url" class="thumbnail" />
             </el-col>
             <!-- 右边数据 -->
             <el-col :span="16">
@@ -23,13 +25,13 @@
                 <div>CSTR: {{ item.cstr }}</div>
                 <div>DOI: {{ item.doi }}</div>
               </div>
-              <!-- 下载按钮，使用click事件实现直接下载 -->
+              <!-- 下载按钮：使用 .stop 阻止冒泡，防止触发卡片点击跳转 -->
               <el-button
                   type="primary"
                   size="small"
                   style="margin-top:10px"
-                  @click="downloadFile(item)"
-                  :disabled="!item.downloadUrl"
+                  @click.stop="downloadFile(item)"
+                  :disabled="!item.downloadUrl && !item.download_url"
               >
                 下载数据
               </el-button>
@@ -76,12 +78,15 @@ export default {
     this.getDatasetList()
   },
   methods: {
+    // 跳转详情页
+    goToDetail(id) {
+      this.$router.push(`/post/${id}`)
+    },
     async getDatasetList() {
       this.loading = true
       this.error = ''
 
       try {
-        // 使用真实API请求
         const res = await getDatasetsApi()
         this.datasetList = res.data
       } catch (err) {
@@ -91,20 +96,15 @@ export default {
         this.loading = false
       }
     },
-    // 直接下载文件的方法
     downloadFile(item) {
-      if (!item.downloadUrl) return
+      const url = item.downloadUrl || item.download_url;
+      if (!url) return;
 
-      // 创建一个临时的a标签
       const link = document.createElement('a')
-      // 设置下载属性，指定文件名（如果需要）
       link.download = item.title || 'dataset'
-      // 设置链接地址
-      link.href = item.downloadUrl
-      // 模拟点击
+      link.href = url
       document.body.appendChild(link)
       link.click()
-      // 清理
       document.body.removeChild(link)
     }
   }
@@ -114,6 +114,17 @@ export default {
 <style scoped>
 .dataset-list {
   padding: 20px;
+}
+
+/* 整个卡片的点击样式与位移效果 */
+.clickable-card {
+  cursor: pointer;
+  transition: all 0.3s ease !important;
+}
+
+.clickable-card:hover {
+  transform: translateX(10px);
+  border-color: #409EFF;
 }
 
 /* 调整图片样式 */
@@ -154,7 +165,6 @@ export default {
   font-size: 20px;
 }
 
-/* 为加载图标添加旋转动画 */
 .loading-container i {
   animation: spin 1s linear infinite;
 }
