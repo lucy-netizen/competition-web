@@ -11,6 +11,7 @@ import Messages from '@/views/messages/index.vue'
 import About from '@/views/about/index.vue'
 import Photos from '@/views/photos/index.vue'
 import store from '@/store';
+import Aboutus from '@/views/aboutus/index.vue'
 
 Vue.use(VueRouter)
 
@@ -75,24 +76,13 @@ const routes = [
                 }
               },
               {
-                path: '/photos',
-                name: 'Photos',
-                component: Photos,
+                path: '/aboutus',
+                name: 'Aboutus',
+                component: Aboutus,
                 meta: {
-                    transition: 'fade',
-                    title: '相册 - 拾壹博客',
-                    icon: 'fas fa-images'
-                }
-              },
-              {
-                path: '/photos/:id',
-                name: 'PhotoDetail',
-                component: () => import('@/views/photos/detail.vue'),
-                meta: {
-                    transition: 'fade',
-                    title: '相册详情 - 拾壹博客',
-                    icon: 'fas fa-images',
-                    hidden: true
+                  transition: 'fade',
+                  title: '关于我们 - 拾壹博客',
+                  icon: 'fas fa-users'
                 }
               },
               {

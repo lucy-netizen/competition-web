@@ -169,10 +169,10 @@ export default {
           icon: 'fas fa-cloud-download-alt',
           colorClass: 'resource-link'
         },
-        { 
-          name: '相册', 
-          path: '/photos', 
-          icon: 'fas fa-images',
+        {
+          name: '关于我们',
+          path: '/aboutus',
+          icon: 'fas fa-users',
           colorClass: 'photos-link'
         },
         { 
@@ -193,13 +193,7 @@ export default {
           icon: 'fas fa-info-circle',
           colorClass: 'about-link',
           children: [
-            {
-              name: '关于我们',
-              path: 'https://pds.wh.sdu.edu.cn/gywm/sdxxkxtd.htm',
-              icon: 'fas fa-images',
-              colorClass: 'photos-link',
-              external: true
-            },
+
             { 
               name: '关于我', 
               path: '/about', 
