@@ -7,7 +7,7 @@ const pdsLab = ref({
   englishTitle: 'PDS Laboratory',
   description: '山东大学威海行星数据系统实验室（PDS）为国内首家符合NASA标准的行星数据系统实验室，由山东大学与圣路易斯华盛顿大学行星数据系统地球科学节点合作建立，存档了国际行星探测任务的科学数据镜像近100 TB，可为月球地形地貌研究提供强有力的数据支撑。',
   images: [
-    { url: '/images/computing.jpg', caption: 'PDS实验室数据处理中心' },
+    { url: 'public/images/computing.jpg', caption: 'PDS实验室数据处理中心' },
     { url: 'public/images/pds.jpg', caption: 'PDS实验室工作环境' }
   ]
 })
@@ -45,7 +45,7 @@ const testingCenter = ref({
     },
     {
       name: 'X射线衍射仪',
-      image: '/images/x.jpg',
+      image: 'public/images/x.jpg',
     },
     {
       name: '傅里叶中红外光谱仪',
@@ -53,7 +53,7 @@ const testingCenter = ref({
     },
     {
       name: '可见近红外光谱仪',
-      image: '/images/visible.jpg',
+      image: 'public/images/visible.jpg',
     }
   ]
 })
