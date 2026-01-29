@@ -194,12 +194,18 @@ const routes = [
                   fullscreen: true
                 }
               },
+          {
+            path: '/data',
+            component: Layout,
+            children: [
               {
-            path: '/data/publish',
-            name: 'DataPublish',
-            component: () => import('@/views/data/Publish.vue'),
-            meta: { title: '科学数据发布' }
-              },
+                path: 'publish',
+                component: () => import('@/views/data/Publish.vue'), // 确保 P 是大写
+                name: 'Publish',
+                meta: { title: '数据发布', icon: 'upload' }
+              }
+            ]
+          },
               {
                 path: '/notifications',
                 name: 'Notifications',
