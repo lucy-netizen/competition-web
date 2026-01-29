@@ -158,8 +158,8 @@ export default {
           colorClass: 'talk-link'
         },
         { 
-          name: '热搜', 
-          path: '/hotSearch', 
+          name: '数据检索工具',
+          path: '/utility',
           icon: 'fas fa-fire',
           colorClass: 'hot-link'
         },
