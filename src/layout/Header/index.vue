@@ -170,6 +170,12 @@ export default {
           colorClass: 'resource-link'
         },
         {
+          name: '科学数据',
+          path: '/scientific-data',
+          icon: 'fas fa-database',
+          colorClass: 'scientific-link'
+        },
+        {
           name: '关于我们',
           path: '/aboutus',
           icon: 'fas fa-users',
