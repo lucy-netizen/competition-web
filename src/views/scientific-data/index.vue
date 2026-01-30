@@ -6,7 +6,7 @@
           <template #header>
             <div class="card-header">
               <span>{{ item.title }}</span>
-              <el-tag type="primary" size="small">相似度 {{ item.similarity }}%</el-tag>
+<!--              <el-tag type="primary" size="small">相似度 {{ item.similarity }}%</el-tag>-->
             </div>
           </template>
 
