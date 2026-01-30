@@ -1,8 +1,8 @@
 <template>
-  <!-- 模板部分完全不变，复制你原来的即可 -->
+
   <div class="tool-detail-page">
     <div class="breadcrumb">
-      <router-link to="/utility">数据检索工具</router-link>
+      <router-link to="/utility">数据挖掘工具</router-link>
       <span> / </span>
       <span>{{ toolInfo.name }}</span>
     </div>
@@ -10,7 +10,7 @@
       <h1 class="tool-title">{{ toolInfo.name }}</h1>
       <div class="tool-version">版本：V1.0</div>
       <div class="tool-img-container">
-        <!-- 直接绑定imageUrl，和参考示例一致，不用任何方法 -->
+        <!-- 直接绑定imageUrl,不用任何方法 -->
         <img
             :src="toolInfo.imageUrl"
             :alt="toolInfo.name"
@@ -23,10 +23,10 @@
         <p class="tool-detail-desc">{{ toolInfo.detailIntro }}</p>
       </div>
       <div class="download-container">
-        <button class="download-btn" @click="virtualDownload">
-          <i class="fas fa-download"></i> 点击下载工具
+        <button class="download-btn" @click="jumpToToolLink">
+          <i class="fas fa-external-link-alt"></i> 跳转至工具地址
         </button>
-        <p class="download-tip">提示：点击后将下载工具压缩包到本地</p>
+        <p class="download-tip">提示：点击后将跳转到行星数据工具官方地址</p>
       </div>
     </div>
   </div>
@@ -41,8 +41,7 @@ export default {
       toolInfo: {
         name: '工具详情',
         imageUrl: '/src/assets/toolimgs/tool1.png', // 完整默认路径
-        detailIntro: '暂无工具介绍',
-        downloadUrl: 'test.zip'
+        detailIntro: '暂无工具介绍'
       }
     }
   },
@@ -64,32 +63,19 @@ export default {
           ...this.toolInfo,
           name: query.name || this.toolInfo.name,
           imageUrl: query.imageUrl || this.toolInfo.imageUrl, // 接收完整图片路径
-          detailIntro: query.detailIntro || this.toolInfo.detailIntro,
-          downloadUrl: query.downloadUrl || this.toolInfo.downloadUrl
+          detailIntro: query.detailIntro || this.toolInfo.detailIntro
         }
       }
     },
-    // 虚拟下载：适配Vite的静态资源，直接写test.zip的完整路径
-    virtualDownload() {
-      try {
-        const downloadLink = document.createElement('a')
-        // 直接写test.zip的完整路径，和图片路径一致
-        downloadLink.href = '/src/assets/toolimgs/test.zip'
-        downloadLink.download = `${this.toolInfo.name}.zip`
-        document.body.appendChild(downloadLink)
-        downloadLink.click()
-        document.body.removeChild(downloadLink)
-        alert(`《${this.toolInfo.name}》工具压缩包已成功下载到本地！`)
-      } catch (e) {
-        alert('下载成功，文件已保存到本地！')
-      }
+    jumpToToolLink() {
+      // 跳转到指定外部链接，_blank表示新标签页打开（不离开当前详情页）
+      window.open('https://umt.nssdc.ac.cn', '_blank')
     }
   }
 }
 </script>
 
 <style scoped>
-/* 样式部分完全不变，复制你原来的即可 */
 .tool-detail-page {
   max-width: 1200px;
   margin: 0 auto;

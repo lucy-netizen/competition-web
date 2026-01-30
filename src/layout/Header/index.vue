@@ -158,7 +158,7 @@ export default {
           colorClass: 'talk-link'
         },
         { 
-          name: '数据检索工具',
+          name: '数据挖掘工具',
           path: '/utility',
           icon: 'fas fa-fire',
           colorClass: 'hot-link'
@@ -168,6 +168,12 @@ export default {
           path: '/infrastructure',
           icon: 'fas fa-cloud-download-alt',
           colorClass: 'resource-link'
+        },
+        {
+          name: '科学数据',
+          path: '/scientific-data',
+          icon: 'fas fa-database',
+          colorClass: 'scientific-link'
         },
         {
           name: '关于我们',
