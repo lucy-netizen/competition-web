@@ -4,13 +4,13 @@
       <main class="main-content">
         <el-card class="content-card">
           <div class="timeline">
-            <div
-              v-for="(item, index) in archives"
-              :key="index"
+            <div 
+              v-for="(item, index) in archives" 
+              :key="index" 
               class="year-group"
               v-animate-on-scroll
             >
-              <div
+              <div 
                 class="year-header"
                 @click="toggleYear(item.year)"
               >
@@ -24,12 +24,12 @@
                 @enter="startTransition"
                 @leave="endTransition"
               >
-                <div
+                <div 
                   class="posts-list"
                   v-show="!collapsedYears[item.year]"
                 >
-                  <div
-                    v-for="post in item.posts"
+                  <div 
+                    v-for="post in item.posts" 
                     :key="post.id"
                     class="post-item"
                     @click="goToPost(post.id)"
@@ -126,12 +126,12 @@ export default {
   padding: $spacing-lg;
   min-height: calc(100vh - 80px);
   align-items: start;
-
+  
   @include responsive(lg) {
     grid-template-columns: 1fr;
     padding: $spacing-lg;
   }
-
+  
   @include responsive(md) {
     padding: $spacing-md;
   }
@@ -200,11 +200,11 @@ export default {
 
   .toggle-icon {
     transition: transform 0.3s ease;
-
+    
     &.is-open {
       transform: rotate(-180deg);
     }
-
+    
     i {
       font-size: 0.8em;
       color: var(--text-secondary);
@@ -370,4 +370,4 @@ export default {
 .expand-leave-from {
   opacity: 1;
 }
-</style>
+</style> 
