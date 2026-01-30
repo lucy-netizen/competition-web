@@ -123,6 +123,15 @@ const routes = [
                 }
             },
             {
+                path: '/scientific-data',
+                name: 'ScientificData',
+                component: () => import('@/views/scientific-data/index.vue'),
+                meta: {
+                    title: '科学数据 ',
+                    icon: 'fas fa-database'
+                }
+            },
+            {
                 path: '/messages',
                 name: 'Messages',
                 component: Messages,
