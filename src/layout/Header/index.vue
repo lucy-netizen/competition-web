@@ -158,7 +158,7 @@ export default {
           colorClass: 'talk-link'
         },
         { 
-          name: '数据检索工具',
+          name: '数据挖掘工具',
           path: '/utility',
           icon: 'fas fa-fire',
           colorClass: 'hot-link'
@@ -170,15 +170,9 @@ export default {
           colorClass: 'resource-link'
         },
         {
-          name: '科学数据',
-          path: '/scientific-data',
-          icon: 'fas fa-database',
-          colorClass: 'scientific-link'
-        },
-        { 
-          name: '相册', 
-          path: '/photos', 
-          icon: 'fas fa-images',
+          name: '关于我们',
+          path: '/aboutus',
+          icon: 'fas fa-users',
           colorClass: 'photos-link'
         },
         { 
@@ -199,13 +193,7 @@ export default {
           icon: 'fas fa-info-circle',
           colorClass: 'about-link',
           children: [
-            {
-              name: '关于我们',
-              path: 'https://pds.wh.sdu.edu.cn/gywm/sdxxkxtd.htm',
-              icon: 'fas fa-images',
-              colorClass: 'photos-link',
-              external: true
-            },
+
             { 
               name: '关于我', 
               path: '/about', 

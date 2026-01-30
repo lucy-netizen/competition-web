@@ -11,9 +11,12 @@ import Messages from '@/views/messages/index.vue'
 import About from '@/views/about/index.vue'
 import Photos from '@/views/photos/index.vue'
 import store from '@/store';
+import Aboutus from '@/views/aboutus/index.vue'
 
 Vue.use(VueRouter)
+
 const routes = [
+
     {
         path: "/",
         component: Layout,
@@ -73,36 +76,35 @@ const routes = [
                 }
               },
               {
-                path: '/photos',
-                name: 'Photos',
-                component: Photos,
-                meta: {
-                    transition: 'fade',
-                    title: '相册 - 拾壹博客',
-                    icon: 'fas fa-images'
-                }
-              },
-              {
-                path: '/photos/:id',
-                name: 'PhotoDetail',
-                component: () => import('@/views/photos/detail.vue'),
-                meta: {
-                    transition: 'fade',
-                    title: '相册详情 - 拾壹博客',
-                    icon: 'fas fa-images',
-                    hidden: true
-                }
-              },
-              {
-                path: '/utility',
-                name: 'Utility',
-                component: () => import(/* webpackPrefetch: true */ '@/views/utility/index.vue'),
+                path: '/aboutus',
+                name: 'Aboutus',
+                component: Aboutus,
                 meta: {
                   transition: 'fade',
-                  title: '数据检索工具 - 拾壹博客',
-                  icon: 'fas fa-fire'
+                  title: '关于我们 - 拾壹博客',
+                  icon: 'fas fa-users'
                 }
               },
+          {
+            path: '/utility',
+            name: 'utility',
+            component: () => import('@/views/utility/index.vue'),
+            meta: {
+              transition: 'fade',
+              title: '数据挖掘工具 - 拾壹博客',
+              icon: 'fas fa-fire'
+            }
+          },
+          // 新增：工具详情页路由
+          {
+            path: '/utility/detail',
+            name: 'ToolDetail',
+            component: () => import('@/views/utility/detail/index.vue'),
+            meta: {
+              transition: 'fade',
+              title: '工具详情 - 拾壹博客'
+            }
+          },
               {
                 path: '/infrastructure',
                 name: 'Infrastructure',
@@ -112,17 +114,8 @@ const routes = [
                   icon: 'fas fa-cloud-download-alt'
 
                 }
-            },
-            {
-                path: '/scientific-data',
-                name: 'ScientificData',
-                component: () => import('@/views/scientific-data/index.vue'),
-                meta: {
-                    title: '科学数据 ',
-                    icon: 'fas fa-database'
-                }
-            },
-            {
+              },
+              {
                 path: '/messages',
                 name: 'Messages',
                 component: Messages,
