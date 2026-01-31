@@ -1,12 +1,13 @@
 <template>
   <div class="article-page" v-loading="loading">
+
     <!-- 固定操作栏：仅保留点赞、收藏、沉浸式浏览 -->
     <div class="floating-action-bar" :style="{ left: actionBarLeft }">
       <el-tooltip class="item" effect="dark" content="点赞" placement="top-start">
         <div class="action-item" @click="toggleLike">
           <el-badge :value="article.likeNum || 0" class="item">
             <div class="action-button">
-              <i class="fas fa-thumbs-up" :class="{ active: article.isLike }"></i>
+              <<i class="fas fa-thumbs-up" :class="{ active: article.isLike }"></i>
             </div>
           </el-badge>
         </div>
@@ -15,7 +16,7 @@
         <div class="action-item" @click="toggleFavorite">
           <el-badge :value="article.favoriteNum || 0" class="item">
             <div class="action-button">
-              <i class="fas fa-star" :class="{ active: article.isFavorite }"></i>
+              <<i class="fas fa-star" :class="{ active: article.isFavorite }"></i>
             </div>
           </el-badge>
         </div>
@@ -23,7 +24,7 @@
       <el-tooltip class="item" effect="dark" content="沉浸式浏览" placement="top-start">
         <div class="action-item" @click="toggleSidebar">
           <div class="action-button">
-            <i class="fas fa-expand"></i>
+            <<i class="fas fa-expand"></i>
           </div>
         </div>
       </el-tooltip>
@@ -37,17 +38,17 @@
 
           <div class="article-info">
             <div class="author-info">
-              <img v-lazy="article.avatar" alt="作者头像" class="author-avatar" src="https://img.shiyit.com/base/mojian/img-error.jpg">
+              <img v-lazy="article.avatar" alt="作者头像" class="author-avatar">
               <div class="author-meta">
                 <span class="author-name">{{ article.nickname }}</span>
                 <div class="post-meta">
                   <time class="publish-time">
-                    <i class="far fa-calendar-alt"></i>
+                    <<i class="far fa-calendar-alt"></i>
                     {{ article.createTime }}
                   </time>
                   <span class="meta-divider">·</span>
                   <span class="category">
-                    <i class="fas fa-folder"></i>
+                    <<i class="fas fa-folder"></i>
                     {{ article.category.name }}
                   </span>
                 </div>
@@ -56,11 +57,11 @@
 
             <div class="article-stats">
               <div class="stat-item">
-                <i class="far fa-eye"></i>
-                <span>{{ article.quantity || 0 }} 阅读</span>
+                <<i class="far fa-eye"></i>
+                <span>{{ article.quantity }} 阅读</span>
               </div>
               <div class="stat-item">
-                <i class="far fa-clock"></i>
+                <<i class="far fa-clock"></i>
                 <span>{{ readTime }} 分钟</span>
               </div>
             </div>
@@ -70,9 +71,9 @@
         <!-- AI简短介绍：保留 -->
         <div v-if="article.aiDescribe" class="ai-description">
           <div class="ai-header" @click="isAiDescriptionExpanded = !isAiDescriptionExpanded">
-            <i class="fas fa-robot"></i>
+            <<i class="fas fa-robot"></i>
             <span>AI 摘要</span>
-            <i class="fas" :class="isAiDescriptionExpanded ? 'fa-chevron-up' : 'fa-chevron-down'" style="margin-left:auto;"></i>
+            <<i class="fas" :class="isAiDescriptionExpanded ? 'fa-chevron-up' : 'fa-chevron-down'" style="margin-left:auto;"></i>
           </div>
           <transition
               name="expand"
@@ -96,7 +97,7 @@
             <div class="preview-content" v-html="getPreviewContent(article.content)"></div>
             <div class="content-locker">
               <div class="locker-icon">
-                <i class="fas fa-crown"></i>
+                <<i class="fas fa-crown"></i>
               </div>
               <h3>会员专享内容</h3>
               <p>成为会员即可阅读全文</p>
@@ -107,7 +108,7 @@
             <div class="preview-content" v-html="getPreviewContent(article.content)"></div>
             <div class="content-locker">
               <div class="locker-icon">
-                <i class="fas fa-lock"></i>
+                <<i class="fas fa-lock"></i>
               </div>
               <h3>付费阅读</h3>
               <p>支付 1 元即可阅读全文</p>
@@ -120,9 +121,9 @@
         <footer class="article-footer">
           <!-- 标签部分保持不变 -->
           <div class="tags-section">
-            <i class="fas fa-tags"></i>
+            <<i class="fas fa-tags"></i>
             <div class="tags-list">
-              <router-link v-for="tag in article.tags || []" :key="tag.id" :to="`/tags?tagId=${tag.id}&tagName=${tag.name}`"
+              <router-link v-for="tag in article.tags" :key="tag.id" :to="`/tags?tagId=${tag.id}&tagName=${tag.name}`"
                            class="tag-item">
                 {{ tag.name }}
               </router-link>
@@ -132,33 +133,33 @@
           <!-- 修改操作按钮部分 -->
           <div class="article-actions">
             <button class="action-btn like" :class="{ active: article.isLike }" @click="toggleLike">
-              <i class="fas fa-heart"></i>
-              <span>{{ article.likeNum || 0 }}</span>
+              <<i class="fas fa-heart"></i>
+              <span>{{ article.likeNum }}</span>
             </button>
             <div class="share-dropdown" v-click-outside="closeShareMenu">
               <button class="action-btn share" @click="toggleShareMenu">
-                <i class="fas fa-share-alt"></i>
+                <<i class="fas fa-share-alt"></i>
                 分享
               </button>
               <div class="share-menu" v-show="showShareMenu">
                 <button class="share-item" @click="shareToQQ">
-                  <i class="fab fa-qq"></i>
+                  <<i class="fab fa-qq"></i>
                   QQ好友
                 </button>
                 <button class="share-item" @click="shareToQzone">
-                  <i class="fas fa-star"></i>
+                  <<i class="fas fa-star"></i>
                   QQ空间
                 </button>
                 <button class="share-item" @click="shareToWeibo">
-                  <i class="fab fa-weibo"></i>
+                  <<i class="fab fa-weibo"></i>
                   微博
                 </button>
                 <button class="share-item" @click="shareToWechat">
-                  <i class="fab fa-weixin"></i>
+                  <<i class="fab fa-weixin"></i>
                   微信
                 </button>
                 <button class="share-item" @click="copyLink">
-                  <i class="fas fa-link"></i>
+                  <<i class="fas fa-link"></i>
                   复制链接
                 </button>
               </div>
@@ -170,24 +171,24 @@
         <div class="copyright-section">
           <div class="copyright-notice">
             <div class="notice-header">
-              <i class="fas fa-copyright"></i>
+              <<i class="fas fa-copyright"></i>
               <span>版权声明</span>
             </div>
             <div class="notice-content">
               <div v-if="article.isOriginal" class="notice-item">
-                <i class="fas fa-check-circle"></i>
+                <<i class="fas fa-check-circle"></i>
                 <span>本文由 {{ article.nickname }} 原创发布</span>
               </div>
               <div v-else class="notice-item">
-                <i class="fas fa-share-alt"></i>
-                <span>本文转载自：<a :href="article.originalUrl" target="_blank" rel="noopener noreferrer" :href="article.originalUrl || '#'">{{ article.originalUrl || '未知来源' }}</a></span>
+                <<i class="fas fa-share-alt"></i>
+                <span>本文转载自：<a :href="article.originalUrl" target="_blank" rel="noopener noreferrer">{{ article.originalUrl || '未知来源' }}</a></span>
               </div>
               <div class="notice-item">
-                <i class="fas fa-calendar-alt"></i>
+                <<i class="fas fa-calendar-alt"></i>
                 <span>发布时间：{{ article.createTime }}</span>
               </div>
               <div class="notice-item">
-                <i class="fab fa-creative-commons-sa"></i>
+                <<i class="fab fa-creative-commons-sa"></i>
                 <span>
                   版权协议：
                   <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="noopener noreferrer">
@@ -196,12 +197,13 @@
                 </span>
               </div>
               <div class="notice-item notice-warning">
-                <i class="fas fa-exclamation-triangle"></i>
+                <<i class="fas fa-exclamation-triangle"></i>
                 <span>未经许可，禁止转载、摘编、复制或建立镜像。欢迎转发分享！</span>
               </div>
             </div>
           </div>
         </div>
+
       </main>
     </div>
     <mj-image-preview ref="imagePreview" />
@@ -220,6 +222,7 @@
 </template>
 
 <script>
+
 import { getArticleDetailApi, likeArticleApi } from '@/api/article'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/atom-one-dark.css'
@@ -233,13 +236,6 @@ export default {
     PaymentDialog,
     MembershipDialog
   },
-  props: {
-    id: {
-      type: [String, Number],
-      required: false,
-      default: ''
-    }
-  },
   data() {
     return {
       article: {
@@ -248,20 +244,6 @@ export default {
         isOriginal: true,
         readType: 1,
         price: 0,
-        likeNum: 0,
-        favoriteNum: 0,
-        quantity: 0,
-        aiDescribe: '',
-        isLike: false,
-        isFavorite: false,
-        isDislike: false,
-        dislikeNum: 0,
-        tags: [],
-        nickname: '',
-        createTime: '',
-        avatar: '',
-        content: '',
-        originalUrl: ''
       },
       readProgress: 0,
       showShareMenu: false,
@@ -274,7 +256,7 @@ export default {
       images: [],
       showPaymentDialog: false,
       showMembershipDialog: false,
-      isAiDescriptionExpanded: true
+      isAiDescriptionExpanded: true,
     }
   },
   computed: {
@@ -289,11 +271,8 @@ export default {
         ignoreUnescapedHTML: true
       })
       try {
-        // 优先使用props的id，没有则用路由参数
-        const dynamicId = this.id || this.$route.params.id
-        const res = await getArticleDetailApi(dynamicId)
+        const res = await getArticleDetailApi(this.$route.params.id)
         this.article = {
-          ...this.article, // 合并默认值，避免未定义
           ...res.data,
           content: res.data.content ? this.addLazyLoadToImages(res.data.content) : ''
         }
@@ -301,7 +280,7 @@ export default {
         await this.$nextTick()
         setTimeout(() => {
           document.querySelectorAll('pre code').forEach((block) => {
-            hljs.highlightElement(block)
+            hljs.highlightBlock(block)
           })
           this.addCopyButtons()
           this.addLineNumbers()
@@ -311,18 +290,17 @@ export default {
 
           if (this.article.aiDescribe) {
             const typingText = this.$refs.typingText
-            if (typingText) {
-              const htmlContent = marked(this.article.aiDescribe || '')
-              typingText.innerHTML = htmlContent
-            }
+            if (!typingText) return
+            const htmlContent = marked(this.article.aiDescribe || '')
+            typingText.innerHTML = htmlContent
           }
         }, 100)
 
         const textContent = this.article.content.replace(/<[^>]+>/g, ' ')
         this.readTime = Math.ceil(textContent.split(/\s+/).length / 300)
+
       } catch (error) {
-        this.$message.error('获取动态详情失败')
-        console.error(error)
+        this.$message.error('获取文章详情失败')
       } finally {
         this.loading = false
       }
@@ -330,7 +308,7 @@ export default {
     addLazyLoadToImages(content) {
       return content.replace(
           /<img([^>]*)src="([^"]*)"([^>]*)>/gi,
-          '<img$1src="' + this.getLoadingImage() + '" data-src="$2" class="lazy-image" alt="文章图片" $3>'
+          '<img$1src="' + this.getLoadingImage() + '" data-src="$2" class="lazy-image"$3>'
       )
     },
     getLoadingImage() {
@@ -341,8 +319,7 @@ export default {
         this.$message.warning('请于 5 秒后再试')
         return
       }
-      const dynamicId = this.id || this.$route.params.id
-      likeArticleApi(dynamicId).then(() => {
+      likeArticleApi(this.$route.params.id).then(res => {
         if (this.article.isLike) {
           this.article.likeNum--
         } else {
@@ -369,7 +346,7 @@ export default {
       const pic = encodeURIComponent(this.article.avatar || '')
       window.open(
           `https://connect.qq.com/widget/shareqq/index.html?url=${url}&title=${title}&summary=${summary}&pics=${pic}`,
-          "renren-share", "width=490,height=700")
+          "renren-share", "width=490,height=700");
       this.closeShareMenu()
     },
     shareToQzone() {
@@ -387,14 +364,14 @@ export default {
       const url = encodeURIComponent(this.currentUrl)
       const title = encodeURIComponent(`${this.article.title} - 拾壹博客`)
       window.open(
-          `https://service.weibo.com/share/share.php?url=${url}&title=${title}`, // 修复HTTP不安全链接
+          `http://service.weibo.com/share/share.php?url=${url}&title=${title}`,
           "renren-share", "width=490,height=700")
       this.closeShareMenu()
     },
     shareToWechat() {
       window.open(
           `https://api.pwmqr.com/qrcode/create/?url=${window.location.href}`,
-          "renren-share", "width=490,height=700")
+          "renren-share", "width=490,height=700");
       this.closeShareMenu()
     },
     async copyLink() {
@@ -418,17 +395,17 @@ export default {
 
         const copyButton = document.createElement('button')
         copyButton.className = 'copy-button'
-        copyButton.innerHTML = '<i class="fas fa-copy"></i> 复制' // 修复多余<符号
+        copyButton.innerHTML = '<<i class="fas fa-copy"></</i> 复制'
         copyButton.title = '复制代码'
 
         copyButton.addEventListener('click', async () => {
           try {
             const code = pre.querySelector('code')
             await navigator.clipboard.writeText(code.textContent)
-            copyButton.innerHTML = '<i class="fas fa-check"></i> 已复制'
+            copyButton.innerHTML = '<<i class="fas fa-check"></</i> 已复制'
             copyButton.classList.add('copied')
             setTimeout(() => {
-              copyButton.innerHTML = '<i class="fas fa-copy"></i> 复制'
+              copyButton.innerHTML = '<<i class="fas fa-copy"></</i> 复制'
               copyButton.classList.remove('copied')
             }, 2000)
             this.$message.success('复制成功')
@@ -487,14 +464,36 @@ export default {
     handleImageClick(e) {
       const img = e.target
       if (img.tagName === 'IMG') {
-        if (this.$refs.imagePreview) {
-          this.$refs.imagePreview.show(this.images, this.images.indexOf(img.src))
-        }
+        this.$refs.imagePreview.show(this.images, this.images.indexOf(img.src))
       }
+    },
+    toggleDislike() {
+      if (this.likeDebounce) {
+        this.$message.warning('请于 5 秒后再试')
+        return
+      }
+      this.$message.success(this.article.isDislike ? '取消点踩成功' : '点踩成功')
+      if (this.article.isDislike) {
+        this.article.dislikeNum--
+      } else {
+        this.article.dislikeNum++
+      }
+      this.article.isDislike = !this.article.isDislike
+      this.likeDebounce = true
+      setTimeout(() => {
+        this.likeDebounce = false
+      }, 5000)
     },
     toggleFavorite() {
       this.$message.warning('暂未开放')
-      // 移除不可达代码
+      return
+      this.$message.success(this.article.isFavorite ? '取消收藏成功' : '收藏成功')
+      if (this.article.isFavorite) {
+        this.article.favoriteNum--
+      } else {
+        this.article.favoriteNum++
+      }
+      this.article.isFavorite = !this.article.isFavorite
     },
     toggleSidebar() {
       this.showSidebar = !this.showSidebar
@@ -524,18 +523,18 @@ export default {
 
           const expandButton = document.createElement('button')
           expandButton.className = 'expand-button'
-          expandButton.innerHTML = '<i class="fas fa-chevron-down"></i>展开代码'
+          expandButton.innerHTML = '<<i class="fas fa-chevron-down"></</i>展开代码'
 
           expandButton.onclick = (e) => {
             e.stopPropagation()
             const isCollapsed = pre.classList.contains('collapsed')
             if (isCollapsed) {
               pre.classList.remove('collapsed')
-              expandButton.innerHTML = '<i class="fas fa-chevron-up"></i>收起代码'
+              expandButton.innerHTML = '<<i class="fas fa-chevron-up"></</i>收起代码'
               this.collapsedCodeBlocks.delete(index)
             } else {
               pre.classList.add('collapsed')
-              expandButton.innerHTML = '<i class="fas fa-chevron-down"></i>展开代码'
+              expandButton.innerHTML = '<<i class="fas fa-chevron-down"></</i>展开代码'
               this.collapsedCodeBlocks.add(index)
             }
           }
@@ -571,14 +570,14 @@ export default {
       return text.substring(0, 300) + '...'
     },
     handleUpgrade() {
-      if (!this.$store?.state?.userInfo) { // 可选链避免报错
+      if (!this.$store.state.userInfo) {
         this.$message.warning('请先登录')
         return
       }
       this.showMembershipDialog = true
     },
     handlePurchase() {
-      if (!this.$store?.state?.userInfo) {
+      if (!this.$store.state.userInfo) {
         this.$message.warning('请先登录')
         return
       }
@@ -630,28 +629,11 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-// 定义缺失的SCSS变量（匹配项目通用样式）
-$spacing-xl: 20px;
-$spacing-lg: 16px;
-$spacing-md: 12px;
-$spacing-sm: 8px;
-$border-radius-lg: 8px;
-$shadow-md: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-
-// 混入响应式方法
-@mixin responsive($breakpoint) {
-  @if $breakpoint == lg {
-    @media (max-width: 1024px) {
-      @content;
-    }
-  }
-}
-
 // 新增版权声明区域样式（移到末尾后）
 .copyright-section {
   padding: $spacing-xl;
-  background: var(--card-bg, #fff);
-  border-top: 1px solid var(--border-color, #e5e7eb);
+  background: var(--card-bg);
+  border-top: 1px solid var(--border-color);
 }
 
 // 保留原有布局
@@ -680,36 +662,11 @@ $shadow-md: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
 }
 
 .article-main {
-  background: var(--card-bg, #fff);
+  background: var(--card-bg);
   border-radius: $border-radius-lg;
   box-shadow: $shadow-md;
   overflow: hidden;
 }
 
-// 补充基础样式避免布局错乱
-.floating-action-bar {
-  position: fixed;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 99;
-}
 
-.action-item {
-  margin: 10px 0;
-  cursor: pointer;
-}
-
-.article-header {
-  padding: $spacing-lg;
-  border-bottom: 1px solid var(--border-color, #e5e7eb);
-}
-
-.article-content {
-  padding: $spacing-lg;
-}
-
-.article-footer {
-  padding: $spacing-lg;
-  border-top: 1px solid var(--border-color, #e5e7eb);
-}
 </style>
