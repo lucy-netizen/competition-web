@@ -563,45 +563,35 @@ export default {
         }
       ],
 
-      // 时间轴数据
+
+      // 时间轴数据（改为从新到旧排列）
       timelineData: [
         {
-          year: '2015-2018',
+          year: '2024-2025',
           achievements: [
             {
-              id: 'early-1',
-              title: '参与嫦娥工程数据分析，发表首篇Nature Communications论文，奠定团队研究基础',
-              field: 'lunar',
-              date: '2015-2018'
-            },
-            {
-              id: 'early-2',
-              title: '开展火星环境模拟实验，建立行星表面物质实验室，为后续探测任务提供技术储备',
+              id: 'innovate-1',
+              title: '发现祝融号火星车在乌托邦平原发现水铝英石等含水矿物，揭示火星水活动新证据',
               field: 'mars',
-              date: '2015-2018'
-            }
-          ]
-        },
-        {
-          year: '2019-2021',
-          achievements: [
-            {
-              id: 'growth-1',
-              title: '参与嫦娥四号任务，实现人类首次月球背面就位探测，在月球地质研究方面取得突破',
-              field: 'lunar',
-              date: '2019-2021'
+              date: '2024'
             },
             {
-              id: 'growth-2',
-              title: '参与天问一号任务预研，开展火星尘暴、水冰探测等关键技术研究',
-              field: 'mars',
-              date: '2019-2021'
+              id: 'innovate-2',
+              title: '参与嫦娥六号任务研究，揭示月球南极-艾肯盆地深部物质组成，成果引起国际关注',
+              field: 'lunar',
+              date: '2024-2025'
             },
             {
-              id: 'growth-3',
-              title: '证实"地球风"可在月球表面生成水，为月球水资源研究提供新视角',
-              field: 'lunar',
-              date: '2021'
+              id: 'innovate-3',
+              title: '开发深度学习模型实现百米级行星表面物质分布预测，推动行星科学人工智能应用',
+              field: 'tech',
+              date: '2025'
+            },
+            {
+              id: 'innovate-4',
+              title: '开展金星大气紫外吸收特征研究，拓展团队在小天体与金星探测领域的研究方向',
+              field: 'venus',
+              date: '2025'
             }
           ]
         },
@@ -629,31 +619,42 @@ export default {
           ]
         },
         {
-          year: '2024-2025',
+          year: '2019-2021',
           achievements: [
             {
-              id: 'innovate-1',
-              title: '发现祝融号火星车在乌托邦平原发现水铝英石等含水矿物，揭示火星水活动新证据',
-              field: 'mars',
-              date: '2024'
-            },
-            {
-              id: 'innovate-2',
-              title: '参与嫦娥六号任务研究，揭示月球南极-艾肯盆地深部物质组成，成果引起国际关注',
+              id: 'growth-1',
+              title: '参与嫦娥四号任务，实现人类首次月球背面就位探测，在月球地质研究方面取得突破',
               field: 'lunar',
-              date: '2024-2025'
+              date: '2019-2021'
             },
             {
-              id: 'innovate-3',
-              title: '开发深度学习模型实现百米级行星表面物质分布预测，推动行星科学人工智能应用',
-              field: 'tech',
-              date: '2025'
+              id: 'growth-2',
+              title: '参与天问一号任务预研，开展火星尘暴、水冰探测等关键技术研究',
+              field: 'mars',
+              date: '2019-2021'
             },
             {
-              id: 'innovate-4',
-              title: '开展金星大气紫外吸收特征研究，拓展团队在小天体与金星探测领域的研究方向',
-              field: 'venus',
-              date: '2025'
+              id: 'growth-3',
+              title: '证实"地球风"可在月球表面生成水，为月球水资源研究提供新视角',
+              field: 'lunar',
+              date: '2021'
+            }
+          ]
+        },
+        {
+          year: '2015-2018',
+          achievements: [
+            {
+              id: 'early-1',
+              title: '参与嫦娥工程数据分析，发表首篇Nature Communications论文，奠定团队研究基础',
+              field: 'lunar',
+              date: '2015-2018'
+            },
+            {
+              id: 'early-2',
+              title: '开展火星环境模拟实验，建立行星表面物质实验室，为后续探测任务提供技术储备',
+              field: 'mars',
+              date: '2015-2018'
             }
           ]
         }
@@ -829,7 +830,8 @@ export default {
 
 .nav-text {
   display: block;
-  font-family: "Times New Roman", Times, serif;
+  font-family: 'Microsoft YaHei UI', 'Microsoft YaHei', 'SimHei', sans-serif;
+
   transition: color 0.3s ease;
 }
 
@@ -1020,7 +1022,7 @@ export default {
   letter-spacing: 2px;
   margin-top: 10px;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  font-family: 'Georgia', 'SimHei', serif;
+  font-family: 'Microsoft YaHei UI', 'Microsoft YaHei', 'SimHei', sans-serif;
   position: relative;
   z-index: 1;
   background: linear-gradient(135deg, #5d6d7e, #3498db);
@@ -1164,12 +1166,14 @@ export default {
   color: #2c3e50;
   margin: 0 0 5px 0;
   letter-spacing: -0.3px;
-  font-family: 'Noto Serif SC', serif;
+  font-family: 'Microsoft YaHei UI', 'Microsoft YaHei', 'SimHei', sans-serif;
+
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .section-subtitle {
   font-size: 0.8rem;
+  font-family: 'Fira Code', 'Source Code Pro', 'Consolas', monospace;
   color: #7f8c8d;
   font-weight: 500;
   letter-spacing: 1px;
@@ -1644,7 +1648,7 @@ export default {
 /* 模块标题 */
 .module-header h2 {
   font-family: 'Noto Serif SC', serif;
-  font-size: 1.5rem;
+  font-size: 1.7rem;
   color: #2c3e50;
   margin-bottom: 5px;
   text-align: center;
@@ -1656,7 +1660,7 @@ export default {
   font-size: 0.8rem;
   margin-bottom: 40px;
   font-style: italic;
-  font-family: 'Times New Roman', 'Times', serif;
+  font-family:  'Noto Serif SC', serif;
 }
 
 /* 视图切换按钮 */

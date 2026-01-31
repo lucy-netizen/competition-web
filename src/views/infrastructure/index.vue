@@ -280,7 +280,7 @@ const handleInstrumentClick = (instrument) => {
   }
 
   .main-title {
-    font-size: 1.35rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: #2c3e50;
     margin-bottom: 0.4rem;
@@ -290,7 +290,7 @@ const handleInstrumentClick = (instrument) => {
   }
 
   .sub-title {
-    font-size: 0.65rem;
+    font-size: 0.8rem;
     font-weight: 400;
     color: #7f8c8d;
     margin-bottom: 0.75rem;
@@ -340,7 +340,7 @@ const handleInstrumentClick = (instrument) => {
 
   .description-wrapper {
     .description {
-      font-size: 0.9rem;
+      font-size: 1rem;
       color: #2c3e50;
       margin-bottom: 0.75rem;
       line-height: 1.7;
@@ -780,12 +780,12 @@ const handleInstrumentClick = (instrument) => {
     margin-bottom: 0.75rem;
 
     .main-title {
-      font-size: 1.25rem;
+      font-size: 1.5rem;
       margin-bottom: 0.25rem;
     }
 
     .sub-title {
-      font-size: 0.55rem;
+      font-size: 0.8rem;
       margin-bottom: 0.5rem;
     }
 
