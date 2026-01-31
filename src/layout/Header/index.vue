@@ -90,6 +90,10 @@
                 <i class="fas fa-user"></i>
                 个人中心
               </router-link>
+              <router-link to="/data/publish" class="dropdown-item">
+                <i class="fas fa-database"></i>
+                科学数据发布
+              </router-link>
               <div class="dropdown-item" @click="handleLogout">
                 <i class="fas fa-sign-out-alt"></i>
                 退出登录
