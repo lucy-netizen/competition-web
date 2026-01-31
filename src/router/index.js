@@ -11,220 +11,218 @@ import Messages from '@/views/messages/index.vue'
 import About from '@/views/about/index.vue'
 import Photos from '@/views/photos/index.vue'
 import store from '@/store';
+import Aboutus from '@/views/aboutus/index.vue'
 
 Vue.use(VueRouter)
 
 const routes = [
 
-  {
-    path: "/",
-    component: Layout,
-    meta: {
-      title: "拾壹博客-一个专注于技术分享的博客平台",
-      loading: true
-    },
-    children: [
-      {
-        path: '/',
-        name: 'Home',
-        component: Home,
+    {
+        path: "/",
+        component: Layout,
         meta: {
-          title: '首页',
-          transition: 'fade',
-          icon: 'fas fa-home',
-          loading: true
-        }
-      },
-      {
-        path: '/archive',
-        name: 'Archive',
-        component: Archive,
-        meta: {
-          transition: 'fade',
-          title: '归档 - 拾壹博客',
-          icon: 'fas fa-archive'
-        }
-      },
-      {
-        path: '/categories',
-        name: 'Categories',
-        component: Categories,
-        meta: {
-          transition: 'fade',
-          title: "分类 - 拾壹博客",
-          icon: 'fas fa-folder'
-        }
-      },
-      {
-        path: '/tags',
-        name: 'Tags',
-        component: Tags,
-        meta: {
-          transition: 'fade',
-          title: '标签 - 拾壹博客',
-          icon: 'fas fa-tags'
-        }
-      },
-      {
-        path: '/moments',
-        name: 'Moments',
-        component: () => import('@/views/moments/index.vue'),
-        meta: {
-          title: '说说 - 拾壹博客',
-          icon: 'fas fa-comment-dots'
-        }
-      },
-      {
-        path: '/photos',
-        name: 'Photos',
-        component: Photos,
-        meta: {
-          transition: 'fade',
-          title: '相册 - 拾壹博客',
-          icon: 'fas fa-images'
-        }
-      },
-      {
-        path: '/photos/:id',
-        name: 'PhotoDetail',
-        component: () => import('@/views/photos/detail.vue'),
-        meta: {
-          transition: 'fade',
-          title: '相册详情 - 拾壹博客',
-          icon: 'fas fa-images',
-          hidden: true
-        }
-      },
-      {
-        path: '/hotSearch',
-        name: 'HotSearch',
-        component: () => import(/* webpackPrefetch: true */ '@/views/hotSearch/index.vue'),
-        meta: {
-          transition: 'fade',
-          title: '热搜 - 拾壹博客',
-          icon: 'fas fa-fire'
-        }
-      },
-      {
-        path: '/infrastructure',
-        name: 'Infrastructure',
-        component: () => import('@/views/infrastructure/index.vue'),
-        meta: {
-          title: '基础设施 - 拾壹博客',
-          icon: 'fas fa-cloud-download-alt'
+            title: "拾壹博客-一个专注于技术分享的博客平台",
+            loading: true
+        },
+        children: [
+            {
+                path: '/',
+                name: 'Home',
+                component: Home,
+                meta: {
+                    title: '首页',
+                    transition: 'fade',
+                    icon: 'fas fa-home',
+                    loading: true
+                 }
+              },
+              {
+                path: '/archive',
+                name: 'Archive',
+                component: Archive,
+                meta: { 
+                  transition: 'fade',
+                  title: '归档 - 拾壹博客',
+                  icon: 'fas fa-archive'
+                }
+              },
+              {
+                path: '/categories',
+                name: 'Categories',
+                component: Categories,
+                meta: {
+                    transition: 'fade',
+                    title: "分类 - 拾壹博客",
+                    icon: 'fas fa-folder'
+                 }
+              },
+              {
+                path: '/tags',
+                name: 'Tags',
+                component: Tags,
+                meta: {
+                    transition: 'fade',
+                    title: '标签 - 拾壹博客',
+                    icon: 'fas fa-tags'
+                }
+              },
+              {
+                path: '/moments',
+                name: 'Moments',
+                component: () => import('@/views/moments/index.vue'),
+                meta: {
+                  title: '说说 - 拾壹博客',
+                  icon: 'fas fa-comment-dots'
+                }
+              },
+              {
+                path: '/aboutus',
+                name: 'Aboutus',
+                component: Aboutus,
+                meta: {
+                  transition: 'fade',
+                  title: '关于我们 - 拾壹博客',
+                  icon: 'fas fa-users'
+                }
+              },
+          {
+            path: '/utility',
+            name: 'utility',
+            component: () => import('@/views/utility/index.vue'),
+            meta: {
+              transition: 'fade',
+              title: '数据挖掘工具 - 拾壹博客',
+              icon: 'fas fa-fire'
+            }
+          },
+          // 新增：工具详情页路由
+          {
+            path: '/utility/detail',
+            name: 'ToolDetail',
+            component: () => import('@/views/utility/detail/index.vue'),
+            meta: {
+              transition: 'fade',
+              title: '工具详情 - 拾壹博客'
+            }
+          },
+              {
+                path: '/infrastructure',
+                name: 'Infrastructure',
+                component: () => import('@/views/infrastructure/index.vue'),
+                meta: {
+                  title: '基础设施 - 拾壹博客',
+                  icon: 'fas fa-cloud-download-alt'
 
-        }
-      },
-      {
-        path: '/messages',
-        name: 'Messages',
-        component: Messages,
-        meta: {
-          transition: 'fade',
-          title: '留言板 - 拾壹博客',
-          icon: 'fas fa-comments'
-        }
-      },
-      {
-        path: '/friends',
-        name: 'Friends',
-        component: () => import(/* webpackPrefetch: true */ '@/views/friends/index.vue'),
-        meta: {
-          transition: 'fade',
-          title: '友情链接 - 拾壹博客',
-          icon: 'fas fa-user-friends'
-        }
-      },
-      {
-        path: '/about',
-        name: 'About',
-        component: About,
-        meta: {
-          transition: 'fade',
-          title: '关于本站 - 拾壹博客',
-          icon: 'fas fa-info-circle'
-        }
-      },
-      {
-        path: '/post/:id',
-        name: 'Post',
-        component: Article,
-        props: true,
-        meta: {
-          hidden: true
-        }
-      },
-      {
-        path: '/user/profile',
-        name: 'Profile',
-        component: () => import(/* webpackPrefetch: true */ '@/views/profile/index.vue'),
-        meta: {
-          title: '个人主页 - 拾壹博客',
-          icon: 'fas fa-user',
-          hidden: true
-        }
-      },
-      {
-        path: '/editor',
-        name: 'Editor',
-        component: () => import(/* webpackPrefetch: true */ '@/views/editor/index.vue'),
-        meta: {
-          title: '写文章 - 拾壹博客',
-          icon: 'fas fa-edit',
-          requireAuth: true,
-          hidden: true
-        }
-      },
-      {
-        path: '/chat',
-        name: 'Chat',
-        component: () => import(/* webpackPrefetch: true */ '@/views/chat/index.vue'),
-        meta: {
-          title: '聊天 - 拾壹博客',
-          icon: 'fas fa-comments',
-          hidden: true
-        }
-      },
-      {
-        path: '/login',
-        name: 'Login',
-        component: () => import('@/views/login/index.vue'),
-        meta: {
-          title: '登录',
-          hidden: true,
-          fullscreen: true
-        }
-      },
-      {
-        path: '/data/publish',
-        name: 'Publish',
-        component: () => import('@/views/data/Publish.vue'),
-        meta: {
-          title: '数据发布 - 拾壹博客',
-          icon: 'fas fa-upload',
-          hidden: true
-        }
-      },
-      {
-        path: '/notifications',
-        name: 'Notifications',
-        component: () => import('@/views/notifications/index.vue'),
-        meta: {
-          title: '消息通知',
-          requiresAuth: true,
-          hidden: true
-        }
-      },
-      {
-        path: '/:pathMatch(.*)*',
-        name: 'NotFound',
-        component: NotFound,
-        meta: {
-          hidden: true
-        }
-      }
-    ]
-  }
+                }
+              },
+            {
+                path: '/scientific-data',
+                name: 'ScientificData',
+                component: () => import('@/views/scientific-data/index.vue'),
+                meta: {
+                    title: '科学数据 ',
+                    icon: 'fas fa-database'
+                }
+            },
+              {
+                path: '/messages',
+                name: 'Messages',
+                component: Messages,
+                meta: { 
+                  transition: 'fade',
+                  title: '留言板 - 拾壹博客',
+                  icon: 'fas fa-comments'
+                }
+              },
+              {
+                path: '/friends',
+                name: 'Friends',
+                component: () => import(/* webpackPrefetch: true */ '@/views/friends/index.vue'),
+                meta: { 
+                  transition: 'fade',
+                  title: '友情链接 - 拾壹博客',
+                  icon: 'fas fa-user-friends'
+                }
+              },
+              {
+                path: '/about',
+                name: 'About',
+                component: About,
+                meta: { 
+                  transition: 'fade',
+                  title: '关于本站 - 拾壹博客',
+                  icon: 'fas fa-info-circle'
+                }
+              },
+              {
+                path: '/post/:id',
+                name: 'Post',
+                component: Article,
+                props: true,
+                meta: {
+                  hidden: true
+                }
+              },
+              {
+                path: '/user/profile',
+                name: 'Profile',
+                component: () => import(/* webpackPrefetch: true */ '@/views/profile/index.vue'),
+                meta: {
+                  title: '个人主页 - 拾壹博客',
+                  icon: 'fas fa-user',
+                  hidden: true
+                }
+              },
+              {
+                path: '/editor',
+                name: 'Editor',
+                component: () => import(/* webpackPrefetch: true */ '@/views/editor/index.vue'),
+                meta: {
+                  title: '写文章 - 拾壹博客',
+                  icon: 'fas fa-edit',
+                  requireAuth: true,
+                  hidden: true
+                }
+              },
+              {
+                path: '/chat',
+                name: 'Chat',
+                component: () => import(/* webpackPrefetch: true */ '@/views/chat/index.vue'),
+                meta: {
+                  title: '聊天 - 拾壹博客',
+                  icon: 'fas fa-comments',
+                  hidden: true
+                }
+              }, {
+                path: '/login',
+                name: 'Login',
+                component: () => import('@/views/login/index.vue'),
+                meta: {
+                  title: '登录',
+                  hidden: true,
+                  fullscreen: true
+                }
+              },
+              {
+                path: '/notifications',
+                name: 'Notifications',
+                component: () => import('@/views/notifications/index.vue'),
+                meta: {
+                  title: '消息通知',
+                  requiresAuth: true,
+                  hidden: true
+                }
+              },
+              {
+                path: '/:pathMatch(.*)*',
+                name: 'NotFound',
+                component: NotFound,
+                meta: {
+                  hidden: true
+                }
+              }
+        ]
+    }
 ]
 
 const router = new VueRouter({
@@ -253,4 +251,4 @@ router.beforeEach((to, from, next) => {
   next()
 })
 
-export default router
+export default router 

@@ -1,105 +1,227 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
-// 云计算存储中心数据
-const storageCenter = ref({
-  title: '云计算存储中心',
-  englishTitle: 'Cloud Computing Storage Center',
-  description: '云计算存储中心是现代企业数据基础设施的核心组成部分，提供安全、可靠、弹性可扩展的数据存储服务。中心采用分布式存储架构和多重数据冗余技术，确保数据的高可用性和持久性。',
-  imageUrl: '/images/computing.jpg'
-})
-
-// PDS实验室数据
+// PDS实验室数据（保留文字）
 const pdsLab = ref({
   title: 'PDS实验室',
   englishTitle: 'PDS Laboratory',
-  description: 'PDS实验室专注于数据存储技术的研究与开发，致力于推动存储技术的创新与突破。实验室拥有一流的研发团队和先进的测试环境，为云计算存储中心提供核心技术支持。',
-  imageUrl: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'
+  description: '山东大学威海行星数据系统实验室（PDS）为国内首家符合NASA标准的行星数据系统实验室，由山东大学与圣路易斯华盛顿大学行星数据系统地球科学节点合作建立，存档了国际行星探测任务的科学数据镜像近100 TB，可为月球地形地貌研究提供强有力的数据支撑。',
+  images: [
+    { url: 'public/images/computing.jpg', caption: 'PDS实验室数据处理中心' },
+    { url: 'public/images/pds.jpg', caption: 'PDS实验室工作环境' }
+  ]
 })
+
+// 行星表面物质实验室（只有图片）
+const surfaceLab = ref({
+  title: '行星表面物质实验室',
+  englishTitle: 'Planetary Surface Materials Laboratory',
+  images: [
+    { url: 'public/images/surface.jpg', caption: '行星表面物质实验室'}
+  ]})
+
+// 行星环境模拟实验室（只有图片）
+const environmentLab = ref({
+  title: '行星环境模拟实验室',
+  englishTitle: 'Planetary Environment Simulation Laboratory',
+  images: [
+    { url: 'public/images/moni.jpg', caption: '行星环境模拟实验室' }
+  ]
+})
+
+// 理化与材料测试中心设备（更新：添加链接）
+const testingCenter = ref({
+  title: '理化与材料测试中心',
+  englishTitle: 'Physical & Chemical Testing Center',
+  instruments: [
+    {
+      name: '场发射电子探针显微分析仪',
+      image: 'public/images/test.jpg',
+      link: ''
+    },
+    {
+      name: '场发射扫描电子显微镜',
+      image: 'public/images/micro.jpg',
+      link: 'http://dxyq.wh.sdu.edu.cn/genee/equipment/35'
+    },
+    {
+      name: 'X射线衍射仪',
+      image: 'public/images/x.jpg',
+      link: 'http://dxyq.wh.sdu.edu.cn/genee/equipment/32'
+    },
+    {
+      name: '傅里叶中红外光谱仪',
+      image: 'public/images/red.jpg',
+      link: ''
+    },
+    {
+      name: '可见近红外光谱仪',
+      image: 'public/images/visible.jpg',
+      link: 'http://dxyq.wh.sdu.edu.cn/genee/equipment/34'
+    }
+  ]
+})
+
+// 计算属性，将设备分成两行
+const firstRowInstruments = computed(() => testingCenter.value.instruments.slice(0, 3))
+const secondRowInstruments = computed(() => testingCenter.value.instruments.slice(3, 5))
+
+// 点击仪器图片的处理函数
+const handleInstrumentClick = (instrument) => {
+  if (instrument.link) {
+    window.open(instrument.link, '_blank')
+  }
+}
 </script>
 
 <template>
-  <div class="content-page">
-    <!-- 云计算存储中心部分 -->
-    <section class="content-section cloud-storage-section">
-      <!-- 标题区域 -->
+  <div class="academic-page">
+    <!-- PDS实验室部分（保留文字） -->
+    <section class="academic-section pds-section">
       <header class="section-header">
-        <h1 class="main-title">{{ storageCenter.title }}</h1>
-        <h2 class="sub-title">{{ storageCenter.englishTitle }}</h2>
-        <div class="title-divider"></div>
+        <div class="title-container">
+          <h1 class="main-title">{{ pdsLab.title }}</h1>
+          <h2 class="sub-title">{{ pdsLab.englishTitle }}</h2>
+          <div class="title-divider"></div>
+        </div>
       </header>
 
-      <!-- 内容区域 - 调整比例让图片更大 -->
-      <div class="section-content cloud-storage-content">
-        <!-- 左侧文字描述 -->
-        <div class="text-content cloud-text">
+      <div class="section-content">
+        <div class="text-content">
           <div class="description-wrapper">
-            <p class="description">{{ storageCenter.description }}</p>
-            <p class="additional-description">
-              该中心采用最新的全闪存架构和智能数据管理平台，通过AI算法优化数据分布和访问路径，
-              显著提升I/O性能并降低能耗。同时，提供完善的数据迁移、容灾备份和合规性管理工具，
-              满足企业级应用对数据存储的全方位需求。
-            </p>
-            <p class="additional-description">
-              云计算存储中心支持多协议访问，包括S3、NFS、CIFS等，兼容各类应用系统。
-              通过全球内容分发网络，实现数据的低延迟访问，为全球用户提供一致的高质量服务体验。
-            </p>
+            <p class="description">{{ pdsLab.description }}</p>
           </div>
         </div>
 
-        <!-- 右侧图片 - 加大图片区域 -->
-        <div class="image-content cloud-image">
-          <div class="image-wrapper cloud-image-wrapper">
+        <div class="image-content double-images">
+          <div class="image-wrapper" v-for="(image, index) in pdsLab.images" :key="index">
             <img
-                :src="storageCenter.imageUrl"
-                :alt="storageCenter.title"
-                class="main-image cloud-main-image"
+                :src="image.url"
+                :alt="image.caption"
+                class="lab-image"
             />
             <div class="image-caption">
-              云计算存储中心基础设施 - 高标准数据中心机房
+              {{ image.caption }}
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- PDS实验室部分 -->
-    <section class="content-section pds-section">
-      <!-- 标题区域 -->
+    <!-- 行星表面物质实验室和行星环境模拟实验室并列显示 -->
+    <div class="labs-row">
+      <!-- 行星表面物质实验室（只有图片） -->
+      <section class="academic-section surface-section small-section">
+        <header class="section-header">
+          <div class="title-container">
+            <h1 class="main-title">{{ surfaceLab.title }}</h1>
+            <h2 class="sub-title">{{ surfaceLab.englishTitle }}</h2>
+            <div class="title-divider"></div>
+          </div>
+        </header>
+
+        <div class="section-content image-only">
+          <div class="image-content single-image">
+            <div class="image-wrapper">
+              <img
+                  :src="surfaceLab.images[0].url"
+                  :alt="surfaceLab.images[0].caption"
+                  class="lab-image"
+              />
+              <div class="image-caption">
+                {{ surfaceLab.images[0].caption }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 行星环境模拟实验室（只有图片） -->
+      <section class="academic-section environment-section small-section">
+        <header class="section-header">
+          <div class="title-container">
+            <h1 class="main-title">{{ environmentLab.title }}</h1>
+            <h2 class="sub-title">{{ environmentLab.englishTitle }}</h2>
+            <div class="title-divider"></div>
+          </div>
+        </header>
+
+        <div class="section-content image-only">
+          <div class="image-content single-image">
+            <div class="image-wrapper">
+              <img
+                  :src="environmentLab.images[0].url"
+                  :alt="environmentLab.images[0].caption"
+                  class="lab-image"
+              />
+              <div class="image-caption">
+                {{ environmentLab.images[0].caption }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- 理化与材料测试中心（只有图片网格） -->
+    <section class="academic-section testing-section">
       <header class="section-header">
-        <h1 class="main-title">{{ pdsLab.title }}</h1>
-        <h2 class="sub-title">{{ pdsLab.englishTitle }}</h2>
-        <div class="title-divider"></div>
+        <div class="title-container">
+          <h1 class="main-title">{{ testingCenter.title }}</h1>
+          <h2 class="sub-title">{{ testingCenter.englishTitle }}</h2>
+          <div class="title-divider"></div>
+        </div>
       </header>
 
-      <!-- 内容区域 -->
-      <div class="section-content">
-        <!-- 左侧文字描述 -->
-        <div class="text-content">
-          <div class="description-wrapper">
-            <p class="description">{{ pdsLab.description }}</p>
-            <p class="additional-description">
-              PDS实验室致力于存储技术的前沿研究，涵盖新型存储介质、存储架构优化、
-              数据压缩算法、存储安全等多个方向。实验室与国内外多所高校和研究机构建立合作关系，
-              共同推动存储技术的发展。
-            </p>
-            <p class="additional-description">
-              实验室配备先进的测试设备，包括高性能服务器集群、全闪存阵列、
-              网络模拟环境等，能够模拟各种复杂的应用场景，为存储产品的研发提供可靠的测试环境。
-            </p>
+      <div class="section-content image-only">
+        <!-- 第一行：3个设备 -->
+        <div class="instruments-grid first-row">
+          <div
+              class="instrument-card"
+              v-for="(instrument, index) in firstRowInstruments"
+              :key="index"
+              :class="{ 'has-link': instrument.link }"
+              @click="handleInstrumentClick(instrument)"
+          >
+            <div class="instrument-image-wrapper">
+              <img
+                  :src="instrument.image"
+                  :alt="instrument.name"
+                  class="instrument-image"
+              />
+            </div>
+            <div class="instrument-info">
+              <h3 class="instrument-name">{{ instrument.name }}</h3>
+              <div v-if="instrument.link" class="instrument-link-hint">
+                <span class="link-icon">🔗</span>
+                <span class="link-text">点击查看详情</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- 右侧图片 -->
-        <div class="image-content">
-          <div class="image-wrapper">
-            <img
-                :src="pdsLab.imageUrl"
-                :alt="pdsLab.title"
-                class="main-image"
-            />
-            <div class="image-caption">
-              PDS实验室内部 - 研发与测试环境
+        <!-- 第二行：2个设备，宽度更大 -->
+        <div class="instruments-grid second-row">
+          <div
+              class="instrument-card wide-card"
+              v-for="(instrument, index) in secondRowInstruments"
+              :key="index"
+              :class="{ 'has-link': instrument.link }"
+              @click="handleInstrumentClick(instrument)"
+          >
+            <div class="instrument-image-wrapper">
+              <img
+                  :src="instrument.image"
+                  :alt="instrument.name"
+                  class="instrument-image"
+              />
+            </div>
+            <div class="instrument-info">
+              <h3 class="instrument-name">{{ instrument.name }}</h3>
+              <div v-if="instrument.link" class="instrument-link-hint">
+                <span class="link-icon">🔗</span>
+                <span class="link-text">点击查看详情</span>
+              </div>
             </div>
           </div>
         </div>
@@ -108,258 +230,433 @@ const pdsLab = ref({
 
     <!-- 页脚 -->
     <footer class="page-footer">
-      <p class="footer-text">云计算存储中心 & PDS实验室 - 创新驱动未来</p>
+      <p class="footer-text">行星科学实验室平台 - 探索宇宙奥秘，服务国家战略</p>
     </footer>
   </div>
 </template>
 
 <style scoped lang="scss">
-.content-page {
-  max-width: 1600px; /* 增加最大宽度 */
-  margin: 0 auto;
-  padding: 2rem 2rem 1rem;
-  font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
-  color: #333;
+.academic-page {
+  padding: 1.5rem 1rem;
+  font-family: 'Arial', 'Helvetica', 'Microsoft YaHei', sans-serif;
+  background: #f8f9fa;
+  color: #2c3e50;
+  line-height: 1.6;
 }
 
-.content-section {
-  margin-bottom: 4rem;
+.academic-section {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  border-left: 4px solid #3498db;
 
   &.pds-section {
-    padding-top: 2rem;
-    border-top: 2px solid #f0f0f0;
+    border-left-color: #05a346; // 绿色
+  }
+
+  &.surface-section {
+    border-left-color: #0c4c8e; // 深蓝色
+  }
+
+  &.environment-section {
+    border-left-color: #4f9ce8; // 浅蓝色
+  }
+
+  &.testing-section {
+    border-left-color: #9b59b6; // 紫色
   }
 }
 
 .section-header {
-  margin-bottom: 2.5rem;
+  margin-bottom: 1.25rem;
+  text-align: center;
+
+
+  .title-container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
 
   .main-title {
-    font-size: 2.8rem;
+    font-size: 1.5rem;
     font-weight: 700;
-    color: #1a365d;
-    margin-bottom: 0.5rem;
-    letter-spacing: 1px;
+    color: #2c3e50;
+    margin-bottom: 0.4rem;
+    letter-spacing: 0.5px;
+    font-family: 'Georgia', 'SimHei', serif;
+    text-transform: none;
   }
 
   .sub-title {
-    font-size: 1.5rem;
+    font-size: 0.8rem;
     font-weight: 400;
-    color: #4a5568;
-    margin-bottom: 1.5rem;
-    font-style: italic;
+    color: #7f8c8d;
+    margin-bottom: 0.75rem;
+    font-style: normal;
+    font-family: 'Georgia', 'SimSun', serif;
   }
 
   .title-divider {
-    width: 80px;
+    width: 100px;
     height: 3px;
-    background: linear-gradient(to right, #4299e1, #38b2ac);
+    background: #3498db;
+    margin: 0 auto;
+
   }
 }
 
-/* 默认的左右布局 */
+// 通用内容布局
 .section-content {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 3rem;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 1.5rem;
   align-items: start;
+  min-height: auto;
 
-  @media (max-width: 1024px) {
+  &.image-only {
     grid-template-columns: 1fr;
-    gap: 2rem;
-  }
-}
-
-/* 云计算存储中心特殊布局 - 图片更大 */
-.cloud-storage-content {
-  grid-template-columns: 1fr 1.5fr; /* 图片区域更宽 */
-  gap: 4rem; /* 增加间距 */
-
-  @media (max-width: 1024px) {
-    grid-template-columns: 1fr;
-    gap: 2.5rem;
-  }
-}
-
-.cloud-text {
-  display: flex;
-  flex-direction: column;
-  justify-content: center; /* 垂直居中文字 */
-}
-
-.cloud-image {
-  .cloud-image-wrapper {
-    border-radius: 16px; /* 更大的圆角 */
-    overflow: hidden;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15); /* 更强的阴影 */
-    transition: transform 0.4s ease, box-shadow 0.4s ease;
-    height: 100%; /* 占满高度 */
     display: flex;
     flex-direction: column;
-
-    &:hover {
-      transform: translateY(-8px) scale(1.01); /* 更强的悬停效果 */
-      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
-    }
-
-    .cloud-main-image {
-      width: 100%;
-      height: 500px; /* 固定高度，图片更大 */
-      object-fit: cover; /* 保持图片比例并填满容器 */
-      display: block;
-      transition: transform 0.7s ease;
-
-      &:hover {
-        transform: scale(1.05); /* 图片悬停放大效果 */
-      }
-
-      @media (max-width: 768px) {
-        height: 350px; /* 移动端调整高度 */
-      }
-    }
-
-    .image-caption {
-      padding: 1.2rem 1.5rem;
-      background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 100%);
-      color: #2d3748; /* 更深的文字颜色 */
-      font-size: 1.1rem; /* 稍大的字体 */
-      text-align: center;
-      border-top: 1px solid #e2e8f0;
-      font-style: italic;
-      font-weight: 500;
-    }
-  }
-}
-
-/* PDS实验室保持原样 */
-.pds-section {
-  .section-header {
-    .main-title {
-      color: #2d3748;
-    }
-
-    .title-divider {
-      background: linear-gradient(to right, #38b2ac, #4299e1);
-    }
+    justify-content: center;
+    align-items: center;
   }
 
-  .image-content .image-wrapper {
-    box-shadow: 0 15px 35px rgba(56, 178, 172, 0.1);
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
 
-    .main-image {
-      height: 400px; /* PDS图片保持较小高度 */
-      object-fit: cover;
-
-      @media (max-width: 768px) {
-        height: 300px;
-      }
+    &.image-only {
+      flex-direction: column;
     }
   }
 }
 
 .text-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
   .description-wrapper {
     .description {
-      font-size: 1.2rem;
-      color: #2d3748;
-      margin-bottom: 1.5rem;
-      line-height: 1.8;
-      font-weight: 500;
-    }
-
-    .additional-description {
-      font-size: 1.1rem;
-      color: #4a5568;
+      font-size: 1rem;
+      color: #2c3e50;
+      margin-bottom: 0.75rem;
       line-height: 1.7;
-      margin-bottom: 1.2rem;
-
-      &:last-child {
-        margin-bottom: 0;
-      }
+      font-weight: 400;
+      text-align: justify;
+      font-family: 'Arial', 'Helvetica', 'Microsoft YaHei', sans-serif;
+      letter-spacing: normal;
     }
   }
 }
 
-/* 普通图片样式 */
-.image-content:not(.cloud-image) {
+// 图片区域样式
+.image-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+
+  &.double-images {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    height: auto;
+
+    .image-wrapper {
+      height: 100%;
+    }
+  }
+
+  &.single-image {
+    .image-wrapper {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+
+      &.large-image {
+        max-width: 900px;
+      }
+    }
+  }
+
   .image-wrapper {
-    border-radius: 12px;
+    border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 15px rgb(148, 198, 232);
+    border: 1px solid #94c6e8;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 
     &:hover {
       transform: translateY(-5px);
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 8px 25px rgb(241, 249, 255);
     }
 
-    .main-image {
+    .lab-image {
       width: 100%;
-      height: auto;
+      height: 350px; /* 从250px增大到350px */
+      object-fit: cover;
       display: block;
       transition: transform 0.5s ease;
 
       &:hover {
-        transform: scale(1.03);
+        transform: scale(1.05);
       }
     }
 
     .image-caption {
-      padding: 1rem 1.5rem;
-      background: #f8fafc;
-      color: #4a5568;
-      font-size: 1rem;
+      padding: 0.25rem 0.75rem;
+      background: #f8f9fa;
+      color: #7f8c8d;
+      font-size: 0.65rem;
       text-align: center;
-      border-top: 1px solid #e2e8f0;
+      border-top: 1px solid #ecf0f1;
       font-style: italic;
+      font-family: 'Georgia', 'SimSun', serif;
+      font-weight: 500;
+    }
+  }
+}
+
+// 仪器设备网格 - 第一行（3个设备）
+.instruments-grid {
+  &.first-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2.5rem;
+    width: 80%;
+    .instrument-info {
+      min-height: auto;
+      padding: 0.1px;
+    }
+    @media (max-width: 1024px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &.second-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    width: auto;
+    height: auto;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+.instrument-card {
+  background: #ffffff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgb(148, 198, 232);
+  border: 1px solid #94c6e8;
+  transition: all 0.3s ease;
+  height: 280px; /* 从200px增大到280px */
+  display: flex;
+  flex-direction: column;
+  cursor: default;
+
+  &.has-link {
+    cursor: pointer;
+    position: relative;
+
+    &:hover {
+      border-color: #3498db;
+      box-shadow: 0 8px 25px rgba(52, 152, 219, 0.2);
+
+      .instrument-image {
+        transform: scale(1.1);
+      }
+
+      .instrument-link-hint {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  }
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgb(241, 249, 255);
+
+    .instrument-image {
+      transform: scale(1.1);
+    }
+  }
+
+  // 第二行的卡片宽度更大
+  &.wide-card {
+    .instrument-image-wrapper {
+      height: auto;
+    }
+
+    .instrument-info {
+      min-height: auto;
+      padding: 0;
+    }
+  }
+
+  .instrument-image-wrapper {
+    height: 280px; /* 从200px增大到280px */
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);
+
+    .instrument-image {
+      width: 700px;
+      max-width: 200%;
+      height: 245px; /* 从175px增大到245px */
+      max-height: 100%;
+      object-fit: contain;
+      transition: transform 0.5s ease;
+    }
+  }
+
+  .instrument-info {
+    padding: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 45px;
+    position: relative;
+
+    .instrument-name {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #2c3e50;
+      margin: 0;
+      font-family: 'Georgia', 'SimHei', serif;
+      line-height: 1.4;
+      word-wrap: break-word;
+    }
+
+    .instrument-link-hint {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.25rem;
+      margin-top: 0.25rem;
+      opacity: 0;
+      transform: translateY(5px);
+      transition: all 0.3s ease;
+
+      .link-icon {
+        font-size: 0.5rem;
+      }
+
+      .link-text {
+        font-size: 0.45rem;
+        color: #3498db;
+        font-weight: 500;
+      }
     }
   }
 }
 
 .page-footer {
-  margin-top: 3rem;
-  padding-top: 2rem;
-  border-top: 1px solid #eaeaea;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #bdc3c7;
   text-align: center;
 
   .footer-text {
-    color: #718096;
-    font-size: 1rem;
+    color: #7f8c8d;
+    font-size: 0.5rem;
     font-style: italic;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-weight: 400;
   }
 }
 
 // 响应式调整
 @media (max-width: 768px) {
-  .content-page {
-    padding: 1.5rem;
+  .academic-page {
+    padding: 1rem 0.5rem;
+  }
+
+  .academic-section {
+    padding: 1rem 0.75rem;
+    margin-bottom: 1rem;
   }
 
   .section-header {
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
 
     .main-title {
-      font-size: 2.2rem;
+      font-size: 1.25rem;
     }
 
     .sub-title {
-      font-size: 1.3rem;
+      font-size: 0.55rem;
     }
   }
 
-  .section-content,
-  .cloud-storage-content {
-    gap: 1.5rem;
+  .section-content {
+    gap: 1rem;
   }
 
-  .text-content {
-    .description-wrapper {
-      .description {
-        font-size: 1.1rem;
+  .text-content .description-wrapper .description {
+    font-size: 0.8rem;
+    line-height: 1.75;
+  }
+
+  .image-content {
+    &.double-images {
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+
+    .image-wrapper .lab-image {
+      height: 245px; /* 从175px增大到245px */
+    }
+  }
+
+  .instrument-card {
+    .instrument-image-wrapper {
+      height: 175px; /* 从125px增大到175px */
+
+      .instrument-image {
+        max-width: 85%;
+        max-height: 85%;
+      }
+    }
+
+    &.wide-card {
+      .instrument-image-wrapper {
+        height: 196px; /* 从140px增大到196px */
+      }
+    }
+
+    .instrument-info {
+      .instrument-name {
+        font-size: 0.75rem;
       }
 
-      .additional-description {
-        font-size: 1rem;
+      .instrument-link-hint {
+        opacity: 1;
+        transform: translateY(0);
+
+        .link-text {
+          font-size: 0.4rem;
+        }
       }
     }
   }
@@ -368,11 +665,214 @@ const pdsLab = ref({
 @media (max-width: 480px) {
   .section-header {
     .main-title {
-      font-size: 1.8rem;
+      font-size: 0.85rem;
     }
 
     .sub-title {
-      font-size: 1.1rem;
+      font-size: 0.5rem;
+    }
+  }
+
+  .academic-section {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .image-content {
+    .image-wrapper {
+      .lab-image {
+        height: 196px; /* 从140px增大到196px */
+      }
+
+      .image-caption {
+        padding: 0.5rem;
+        font-size: 0.5rem;
+      }
+    }
+  }
+
+  .instruments-grid {
+    &.first-row, &.second-row {
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+  }
+
+  .instrument-card {
+    .instrument-image-wrapper {
+      height: 154px; /* 从110px增大到154px */
+    }
+
+    &.wide-card {
+      .instrument-image-wrapper {
+        height: 168px; /* 从120px增大到168px */
+      }
+    }
+
+    .instrument-info {
+      padding: 0.6rem;
+
+      .instrument-name {
+        font-size: 0.6rem;
+      }
+
+      .instrument-link-hint {
+        .link-icon {
+          font-size: 0.45rem;
+        }
+
+        .link-text {
+          font-size: 0.35rem;
+        }
+      }
+    }
+  }
+}
+
+// 动画效果
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.academic-section {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.image-wrapper {
+  animation: fadeIn 0.8s ease-out;
+}
+
+.instrument-card {
+  animation: fadeIn 0.8s ease-out;
+
+  &:nth-child(1) { animation-delay: 0.1s; }
+  &:nth-child(2) { animation-delay: 0.2s; }
+  &:nth-child(3) { animation-delay: 0.3s; }
+  &:nth-child(4) { animation-delay: 0.4s; }
+  &:nth-child(5) { animation-delay: 0.5s; }
+}
+
+// 新增：实验室并列布局
+.labs-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+//行星实验室
+.academic-section.small-section {
+  padding: 1rem;
+  margin-bottom: 0;
+
+  .section-header {
+    margin-bottom: 0.75rem;
+
+    .main-title {
+      font-size: 1.5rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .sub-title {
+      font-size: 0.8rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .title-divider {
+      width: 80px;
+      height: 2px;
+    }
+  }
+
+  .section-content.image-only {
+    .image-content.single-image {
+      .image-wrapper {
+        .lab-image {
+          height: 220px; /* 从150px增大到210px */
+        }
+
+        .image-caption {
+          padding: 0.5rem;
+          font-size: 0.7rem;
+        }
+      }
+    }
+  }
+}
+
+// 响应式调整
+@media (max-width: 768px) {
+  .labs-row {
+    gap: 0.75rem;
+  }
+
+  .academic-section.small-section {
+    padding: 0.75rem;
+
+    .section-header {
+      .main-title {
+        font-size: 0.8rem;
+      }
+
+      .sub-title {
+        font-size: 0.5rem;
+      }
+    }
+
+    .section-content.image-only {
+      .image-content.single-image {
+        .image-wrapper {
+          .lab-image {
+            height: 175px; /* 从125px增大到175px */
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .labs-row {
+    grid-template-columns: 1fr;
+  }
+
+  .academic-section.small-section {
+    padding: 0.6rem;
+
+    .section-header {
+      .main-title {
+        font-size: 0.7rem;
+      }
+
+      .sub-title {
+        font-size: 0.45rem;
+      }
+    }
+
+    .section-content.image-only {
+      .image-content.single-image {
+        .image-wrapper {
+          .lab-image {
+            height: 140px; /* 从100px增大到140px */
+          }
+
+          .image-caption {
+            padding: 0.4rem;
+            font-size: 0.45rem;
+          }
+        }
+      }
     }
   }
 }

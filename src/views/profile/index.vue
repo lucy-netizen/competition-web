@@ -1,1482 +1,433 @@
 <template>
-  <div class="profile-container">
-    <!-- 左侧固定导航 -->
-    <div class="profile-sidebar" role="complementary">
-      <!-- 用户信息卡片 -->
-      <el-card class="user-card">
-        <div class="avatar-section">
-          <div class="avatar-wrapper" @click="showCropper = true" role="button" tabindex="0"
-            aria-label="更换头像">
-            <el-avatar :size="100" :src="userInfo.avatar" alt="用户头像"></el-avatar>
-            <div class="upload-overlay" inert>
-              <i class="el-icon-camera"></i>
-            </div>
+  <div class="profile-wrapper">
+    <!-- 1. 顶部个人信息 (参考 Image 3 居中风格) -->
+    <div class="profile-header-card">
+      <el-card shadow="never" class="header-main centered-design">
+        <div class="header-content">
+          <div class="avatar-box">
+            <el-avatar :size="110" :src="userInfo.avatar" @click.native="showCropper = true"></el-avatar>
           </div>
-        </div>
-        <h3 class="username">{{ userInfo.nickname }}</h3>
-        <p class="signature">{{ userInfo.signature || '这个人很懒，还没有写简介...' }}</p>
-        
-        <!-- 添加签到按钮 -->
-        <div class="sign-in-section">
-          <el-button 
-            type="primary" 
-            :disabled="signInStatus"
-            @click="handleSignIn"
-            size="small"
-            :loading="signInLoading"
-          >
-            <i class="el-icon-check"></i>
-            {{ signInStatus ? '今日已签到' : '立即签到' }}
-          </el-button>
-          <div class="sign-in-stats">
-            <div class="stat-item">
-              <span class="label">连续签到</span>
-              <span class="value">{{ signInStats.continuousDays }}天</span>
-            </div>
-            <div class="stat-item">
-              <span class="label">累计签到</span>
-              <span class="value">{{ signInStats.totalDays }}天</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="user-stats" role="list">
-          <div class="stat-item" role="listitem">
-            <span class="number">{{ statistics.posts }}</span>
-            <span class="label">文章</span>
-          </div>
-          <div class="stat-item" role="listitem">
-            <span class="number">{{ statistics.followers }}</span>
-            <span class="label">关注者</span>
-          </div>
-          <div class="stat-item" role="listitem">
-            <span class="number">{{ statistics.likes }}</span>
-            <span class="label">获赞</span>
+          <div class="info-detail">
+            <h2 class="nickname">{{ userInfo.nickname }}</h2>
+            <p class="signature-text">{{ userInfo.signature || '这个人很懒，还没有写简介...' }}</p>
+            <!-- 建议：18px 字体，精致且有存在感 -->
+            <el-button round class="edit-btn-top" @click="openEditDialog">编辑个人资料</el-button>
           </div>
         </div>
       </el-card>
-
-      <!-- 导航菜单 -->
-      <el-menu class="nav-menu" :default-active="currentTab" @select="currentTab = $event" role="navigation">
-        <el-menu-item v-for="tab in tabs" :key="tab.key" :index="tab.key" :aria-label="tab.label">
-          <i :class="tab.icon"></i>
-          <span>{{ tab.label }}</span>
-        </el-menu-item>
-      </el-menu>
     </div>
 
-    <!-- 右侧内容区 -->
-    <main class="content-area" role="main">
-      <!-- 个人资料 -->
-      <div v-if="currentTab === 'profile'" class="content-section">
-        <h2 class="section-title">个人资料</h2>
-        <el-form ref="profileForm" :model="profileForm" :rules="profileRules" label-width="80px" class="profile-form"
-          @submit.prevent="submitProfile">
-          <el-form-item label="昵称" prop="nickname">
-            <el-input v-model="profileForm.nickname" placeholder="请输入昵称" aria-label="昵称输入框"></el-input>
-          </el-form-item>
-          <el-form-item label="邮箱" prop="email">
-            <el-input v-model="profileForm.email" placeholder="请输入邮箱" aria-label="邮箱输入框"></el-input>
-          </el-form-item>
-          <el-form-item label="个人简介">
-            <el-input type="textarea" v-model="profileForm.signature" :rows="4" placeholder="介绍一下自己吧..."></el-input>
-          </el-form-item>
-          <el-form-item label="性别">
-            <el-radio-group v-model="profileForm.sex">
-              <el-radio :label="1">男</el-radio>
-              <el-radio :label="2">女</el-radio>
-              <el-radio :label="0">保密</el-radio>
-            </el-radio-group>
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" @click="submitProfile" :loading="loading" icon="el-icon-edit"
-              size="small">保存修改</el-button>
-            <el-button size="small" @click="resetProfile" icon="el-icon-refresh">重置</el-button>
-          </el-form-item>
-        </el-form>
-      </div>
+    <!-- 2. 下方分栏布局 -->
+    <el-row :gutter="20" class="main-content-row">
+      <!-- 左侧内容区 (1.10 功能整合) -->
+      <el-col :xs="24" :sm="24" :md="18">
+        <el-card shadow="never" class="content-tabs-card">
+          <el-tabs v-model="currentTab" class="main-tabs">
 
-      <!-- 账号绑定 -->
-      <div v-if="currentTab === 'binding'" cla1110ss="content-section">
-        <h2 class="section-title">账号绑定</h2>
-        <div class="binding-tips">
-          <el-alert title="账号绑定提示" type="info" description="绑定第三方账号后，您可以直接使用第三方账号登录本站，还可以同步您的个人信息。" show-icon
-            :closable="false">
-          </el-alert>
-        </div>
-        <div class="binding-list">
-          <el-card v-for="account in boundAccounts" :key="account.type" class="binding-item">
-            <div class="binding-content">
-              <div class="account-info">
-                <div class="account-icon">
-                  <i :class="account.icon" :style="{ color: account.color }"></i>
+            <!-- 我的发布 -->
+            <el-tab-pane name="topics">
+              <span slot="label"><i class="el-icon-chat-dot-round"></i> 我的发布</span>
+              <div class="tab-body">
+                <div class="action-bar">
+                  <el-input v-model="params.title" size="mini" placeholder="搜索话题标题..." style="width: 250px; margin-right: 10px"></el-input>
+                  <el-button type="primary" size="mini" icon="el-icon-search" @click="handleSearch">搜索</el-button>
+                  <el-button type="success" size="mini" icon="el-icon-edit" @click="$router.push('/editor')" style="float: right">发布新话题</el-button>
                 </div>
-                <div class="account-details">
-                  <span class="account-name">{{ account.name }}</span>
-                  <span class="account-desc">{{ account.isBound ? account.username : '未绑定账号' }}</span>
-                </div>
-              </div>
-              <div class="binding-status">
-                <el-tag :type="account.isBound ? 'success' : 'info'" size="small" effect="dark" class="status-tag">
-                  {{ account.isBound ? '已绑定' : '未绑定' }}
-                </el-tag>
-                <el-button :type="account.isBound ? 'danger' : 'primary'" size="small"
-                  :icon="account.isBound ? 'el-icon-close' : 'el-icon-link'"
-                  @click="account.isBound ? unbindAccount(account.type) : bindAccount(account.type)">
-                  {{ account.isBound ? '解除绑定' : '立即绑定' }}
-                </el-button>
-              </div>
-            </div>
-          </el-card>
-        </div>
-
-      </div>
-
-      <!-- 我的文章 -->
-      <div v-if="currentTab === 'posts'" class="content-section">
-        <h2 class="section-title">我的文章</h2>
-        <div class="action-bar">
-          <div>
-            <el-input v-model="params.title" size="mini" placeholder="输入文字标题搜索文章..." prefix-icon="el-icon-search"
-              style="width: 300px;margin-right: 10px"></el-input>
-            <el-button type="primary" size="mini" icon="el-icon-search" @click="handleSearch">搜索</el-button>
-          </div>
-
-          <el-button type="primary" icon="el-icon-edit" size="mini" @click="$router.push('/editor')">写文章</el-button>
-        </div>
-
-        <div v-loading="loading" v-if="posts.length">
-          <el-card v-for="post in posts" :key="post.id" class="post-item">
-            <div class="post-content">
-              <h3 class="post-title" @click="viewPost(post.id)">{{ post.title }}</h3>
-              <p class="post-excerpt">{{ post.summary }}</p>
-              <div class="post-meta">
-                <el-tag size="small"><i class="el-icon-date"></i>{{ post.createTime }}</el-tag>
-                <el-tag size="small" type="info"><i class="el-icon-view"></i>{{ post.quantity }} 阅读</el-tag>
-                <el-tag size="small" type="success"><i class="el-icon-chat-line-square"></i>{{ post.commentNum || 0 }}
-                  评论</el-tag>
-                <el-tag size="small" type="warning"><i class="el-icon-star-off"></i>{{ post.likeNum || 0 }} 点赞</el-tag>
-              </div>
-            </div>
-            <div class="post-actions">
-              <el-button type="text" icon="el-icon-view" @click="viewPost(post.id)">查看</el-button>
-              <el-button type="text" icon="el-icon-edit" @click="editPost(post.id)">编辑</el-button>
-              <el-button type="text" icon="el-icon-delete" class="delete" @click="deletePost(post)">删除</el-button>
-            </div>
-          </el-card>
-
-          <div class="pagination-box">
-            <el-pagination background @current-change="handlePostChange" :current-page="params.pageNum"
-              :page-size="params.pageSize" :total="total" layout="prev, pager, next" class="pagination"></el-pagination>
-          </div>
-        </div>
-        <el-empty v-else description="暂无文章，快去发布你的文章吧~~"></el-empty>
-      </div>
-
-      <!-- 我的评论 -->
-      <div v-if="currentTab === 'comments'" class="content-section">
-        <h2 class="section-title">我的评论</h2>
-        <div v-if="myComments.length" v-loading="loading">
-          <el-card v-for="comment in myComments" :key="comment.id" class="comment-item">
-            <div class="comment-actions">
-              <p class="comment-text" v-html="parseContent(comment.content)"></p>
-              <el-button type="text" icon="el-icon-delete" class="delete"
-                @click="deleteComment(comment.id)">删除</el-button>
-            </div>
-            <div class="comment-meta">
-              <el-link type="primary" @click="viewPost(comment.articleId)">文章：{{ comment.articleTitle }}</el-link>
-              <el-tag size="small">
-                <i class="el-icon-time"></i>
-                {{ comment.createTime }}
-              </el-tag>
-              <el-tag size="small" type="success"><i class="el-icon-star-off"></i>{{ comment.likeCount ?
-                comment.likeCount : 0 }} 赞</el-tag>
-            </div>
-          </el-card>
-          <div class="pagination-box">
-            <el-pagination background v-if="myComments.length" @current-change="handlePageChange"
-              :current-page="params.pageNum" :page-size="params.pageSize" layout="prev, pager, next" :total="total">
-            </el-pagination>
-          </div>
-        </div>
-        <el-empty v-else description="暂无评论数据"></el-empty>
-      </div>
-
-      <!-- 我的回复 -->
-      <div v-if="currentTab === 'replies'" class="content-section">
-        <h2 class="section-title">我的回复</h2>
-        <div v-if="myReplies.length" v-loading="loading">
-          <el-card v-for="reply in myReplies" :key="reply.id" class="reply-item">
-            <div class="reply-content">
-              <div class="comment-actions">
-                <p class="reply-text">
-                  <el-tag size="small" type="info">回复 @{{ reply.replyNickname }}</el-tag>
-                <p v-html="parseContent(reply.content)"></p>
-                </p>
-                <el-button type="text" icon="el-icon-delete" class="delete"
-                  @click="deleteReply(reply.id)">删除</el-button>
-              </div>
-              <div class="reply-meta">
-                <el-link type="primary" @click="viewPost(reply.articleId)">文章：{{ reply.articleTitle }}</el-link>
-                <el-tag size="small">
-                  <i class="el-icon-time"></i>
-                  {{ reply.createTime }}
-                </el-tag>
-              </div>
-            </div>
-          </el-card>
-
-          <div class="pagination-box">
-            <el-pagination background v-if="myReplies.length" @current-change="handleReplyPageChange"
-              :current-page="params.pageNum" :page-size="params.pageSize" layout="prev, pager, next" :total="total">
-            </el-pagination>
-          </div>
-        </div>
-
-        <el-empty v-else description="暂无回复评论数据"></el-empty>
-
-      </div>
-
-      <!-- 我的点赞 -->
-      <div v-if="currentTab === 'likes'" class="content-section">
-        <h2 class="section-title">我的点赞</h2>
-        <div v-if="myLikes.length" v-loading="loading">
-          <el-card v-for="like in myLikes" :key="like.id" class="like-item">
-            <div class="like-content">
-              <div class="comment-actions">
-                <el-link class="article-title" @click="viewPost(like.id)">{{ like.title }}</el-link>
-                <el-button type="text" icon="el-icon-star-off" class="delete"
-                  @click="cancelLike(like.id)">取消点赞</el-button>
-              </div>
-              <div class="like-meta">
-                <!-- <el-tag size="small"><i class="el-icon-user"></i>{{ like.author }}</el-tag> -->
-                <el-tag size="small">
-                  <i class="el-icon-time"></i>
-                  {{ like.createTime }}
-                </el-tag>
-              </div>
-            </div>
-          </el-card>
-          <div class="pagination-box">
-            <el-pagination background v-if="myLikes.length" @current-change="handleLikePageChange"
-              :current-page="params.pageNum" :page-size="params.pageSize" layout="prev, pager, next" :total="total">
-            </el-pagination>
-          </div>
-        </div>
-
-        <el-empty v-else description="暂无点赞数据"></el-empty>
-      </div>
-
-      <!-- 修改密码 -->
-      <div v-if="currentTab === 'security'" class="content-section">
-        <h2 class="section-title">修改密码</h2>
-
-        <div class="binding-tips">
-          <el-alert title="修改密码提示" type="info" description="只有邮箱登录的才可修改密码，其他第三方登录不存在修改密码功能。" show-icon
-            :closable="false">
-          </el-alert>
-        </div>
-        <el-form ref="passwordForm" :model="passwordForm" :rules="passwordRules" label-width="100px"
-          class="security-form">
-          <el-form-item label="当前密码" prop="oldPassword">
-            <el-input type="password" v-model="passwordForm.oldPassword" show-password placeholder="请输入当前密码"></el-input>
-          </el-form-item>
-          <el-form-item label="新密码" prop="newPassword">
-            <el-input type="password" v-model="passwordForm.newPassword" show-password placeholder="请输入新密码"></el-input>
-          </el-form-item>
-          <el-form-item label="确认新密码" prop="confirmPassword">
-            <el-input type="password" v-model="passwordForm.confirmPassword" show-password
-              placeholder="请再次输入新密码"></el-input>
-          </el-form-item>
-          <el-form-item>
-            <el-button size="small" type="primary" @click="submitPasswordChange" icon="el-icon-edit"
-              :loading="loading">确认修改</el-button>
-          </el-form-item>
-        </el-form>
-      </div>
-
-      <!-- 反馈 -->
-      <div v-if="currentTab === 'feedback'" class="content-section">
-        <h2 class="section-title">意见反馈</h2>
-        <el-tabs>
-          <el-tab-pane label="提交反馈">
-            <el-form ref="feedbackForm" :model="feedbackForm" :rules="feedbackRules" label-width="100px"
-              class="feedback-form">
-              <el-form-item label="反馈类型" prop="type">
-                <el-select v-model="feedbackForm.type" placeholder="请选择反馈类型">
-                  <el-option v-for="item in feedbackTypes" :label="item.label" :value="item.value"></el-option>
-                </el-select>
-              </el-form-item>
-              <el-form-item label="反馈内容" prop="content">
-                <el-input type="textarea" v-model="feedbackForm.content" :rows="5"
-                  placeholder="请详细描述您的问题或建议..."></el-input>
-              </el-form-item>
-              <el-form-item label="联系邮箱" prop="email">
-                <el-input v-model="feedbackForm.email" placeholder="请留下您的联系邮箱，方便我们回复您"></el-input>
-              </el-form-item>
-              <el-form-item>
-                <el-button type="primary" @click="submitFeedback" icon="el-icon-check"
-                  :loading="loading">提交反馈</el-button>
-              </el-form-item>
-            </el-form>
-          </el-tab-pane>
-
-          <el-tab-pane label="我的反馈">
-            <div class="feedback-list">
-              <div v-loading="loading" v-if="myFeedbacks.length">
-                <el-card v-for="feedback in myFeedbacks" :key="feedback.id" class="feedback-item">
-                  <div class="feedback-header">
-                    <div class="feedback-info">
-                      <el-tag v-if="item.value === feedback.type" v-for="item in feedbackTypes" :type="item.style">
-                        {{ item.label }}
-                      </el-tag>
-                      <span class="feedback-time">
-                        <i class="far fa-clock"></i>
-                        {{ feedback.createTime }}
-                      </span>
+                <div v-loading="loading" v-if="posts.length">
+                  <div v-for="post in posts" :key="post.id" class="list-item-card">
+                    <div class="item-main">
+                      <h4 @click="viewPost(post.id)">{{ post.title }}</h4>
+                      <p>{{ post.summary }}</p>
+                      <div class="item-meta">
+                        <span><i class="el-icon-time"></i> {{ post.createTime }}</span>
+                        <span><i class="el-icon-view"></i> {{ post.quantity }} 阅读</span>
+                        <span><i class="el-icon-star-off"></i> {{ post.likeNum || 0 }} 点赞</span>
+                      </div>
                     </div>
-                    <el-tag v-if="item.value === String(feedback.status)" v-for="item in feedbackStatus"
-                      :type="item.style">
-                      {{ item.label }}
-                    </el-tag>
-                  </div>
-                  <div class="feedback-content">
-                    <p>{{ feedback.content }}</p>
-                  </div>
-                  <div class="feedback-reply" v-if="feedback.replyContent">
-                    <div class="reply-title">
-                      <i class="el-icon-chat-line-round"></i> 管理员回复：
+                    <div class="item-actions">
+                      <el-button type="text" size="small" @click="editPost(post.id)">编辑</el-button>
+                      <el-button type="text" size="small" class="delete-text" @click="deletePost(post)">删除</el-button>
                     </div>
-                    <p class="reply-content">{{ feedback.replyContent }}</p>
                   </div>
-                </el-card>
-                <div class="pagination-box" v-if="myFeedbacks.length">
-                  <el-pagination background @current-change="handleFeedbackPageChange" :current-page="params.pageNum"
-                    :page-size="params.pageSize" layout="prev, pager, next" :total="total">
-                  </el-pagination>
+                  <div class="pagination-center">
+                    <el-pagination background @current-change="handlePostChange" :current-page="params.pageNum" :page-size="params.pageSize" :total="total" layout="prev, pager, next"></el-pagination>
+                  </div>
+                </div>
+                <el-empty v-else description="暂无话题"></el-empty>
+              </div>
+            </el-tab-pane>
+
+            <!-- 我的互动 (精准改动点：优化标签顺序) -->
+            <el-tab-pane name="interaction">
+              <span slot="label"><i class="el-icon-set-up"></i> 我的互动</span>
+              <div class="tab-body">
+                <el-tabs type="border-card" v-model="interactionSubTab">
+                  <!-- 1. 我的点赞 -->
+                  <el-tab-pane label="我的点赞" name="likes">
+                    <div v-loading="loading" v-if="myLikes.length">
+                      <div v-for="like in myLikes" :key="like.id" class="list-item-card">
+                        <div class="item-main">
+                          <h4 @click="viewPost(like.id)">{{ like.title }}</h4>
+                          <div class="item-meta"><span>点赞于：{{ like.createTime }}</span></div>
+                        </div>
+                        <el-button type="text" class="delete-text" @click="cancelLike(like.id)">取消点赞</el-button>
+                      </div>
+                    </div>
+                    <el-empty v-else description="暂无点赞的内容"></el-empty>
+                  </el-tab-pane>
+
+                  <!-- 2. 我的收藏 -->
+                  <el-tab-pane label="我的收藏" name="favorites">
+                    <div v-loading="loading" v-if="myFavorites.length">
+                      <div v-for="fav in myFavorites" :key="fav.id" class="list-item-card">
+                        <div class="item-main">
+                          <h4 @click="viewPost(fav.id)">{{ fav.title }}</h4>
+                          <div class="item-meta"><span>收藏于：{{ fav.createTime }}</span></div>
+                        </div>
+                        <el-button type="text" class="delete-text" @click="cancelFavorite(fav.id)">取消收藏</el-button>
+                      </div>
+                    </div>
+                    <el-empty v-else description="暂无收藏的内容"></el-empty>
+                  </el-tab-pane>
+
+                  <!-- 3. 我的关注 -->
+                  <el-tab-pane label="我的关注" name="follow">
+                    <el-empty description="暂无关注的人"></el-empty>
+                  </el-tab-pane>
+
+                  <!-- 4. 收到的赞 -->
+                  <el-tab-pane label="收到的赞" name="received_likes">
+                    <el-empty description="暂时还没有人给您点赞哦，快去发布精彩话题吧！"></el-empty>
+                  </el-tab-pane>
+
+                  <!-- 5. 收到的收藏 -->
+                  <el-tab-pane label="收到的收藏" name="received_favorites">
+                    <el-empty description="您的文章还没有被收藏过，继续加油哦！"></el-empty>
+                  </el-tab-pane>
+
+                  <!-- 6. 我的粉丝 -->
+                  <el-tab-pane label="我的粉丝" name="fans">
+                    <el-empty description="暂无粉丝"></el-empty>
+                  </el-tab-pane>
+                </el-tabs>
+              </div>
+            </el-tab-pane>
+
+            <!-- 意见反馈 (提交+记录) -->
+            <el-tab-pane name="feedback">
+              <span slot="label"><i class="el-icon-message"></i> 意见反馈</span>
+              <div class="tab-body">
+                <el-tabs type="border-card" v-model="feedbackSubTab">
+                  <el-tab-pane label="提交反馈" name="submit">
+                    <el-form :model="feedbackForm" label-width="80px" style="max-width: 600px; padding-top: 20px">
+                      <el-form-item label="反馈类型">
+                        <el-select v-model="feedbackForm.type">
+                          <el-option v-for="item in feedbackTypes" :key="item.value" :label="item.label" :value="item.value"></el-option>
+                        </el-select>
+                      </el-form-item>
+                      <el-form-item label="详细内容"><el-input type="textarea" :rows="5" v-model="feedbackForm.content"></el-input></el-form-item>
+                      <el-form-item><el-button type="primary" @click="submitFeedback">立即提交</el-button></el-form-item>
+                    </el-form>
+                  </el-tab-pane>
+                  <el-tab-pane label="我的反馈" name="history">
+                    <div v-loading="loading" v-if="myFeedbacks.length">
+                      <div v-for="f in myFeedbacks" :key="f.id" class="feedback-history-item">
+                        <div class="f-header">
+                          <el-tag size="mini">{{ getFeedbackTypeName(f.type) }}</el-tag>
+                          <span class="f-time">{{ f.createTime }}</span>
+                          <el-tag :type="f.status == 1 ? 'success' : 'info'" size="mini" class="f-status">{{ f.status == 1 ? '已处理' : '待处理' }}</el-tag>
+                        </div>
+                        <div class="f-body">{{ f.content }}</div>
+                        <div class="f-reply" v-if="f.replyContent">
+                          <div class="reply-title"><i class="el-icon-chat-dot-round"></i> 管理员回复：</div>
+                          <div class="reply-text">{{ f.replyContent }}</div>
+                        </div>
+                      </div>
+                      <el-pagination background @current-change="handleFeedbackPageChange" :current-page="params.pageNum" :page-size="params.pageSize" layout="prev, pager, next" :total="feedbackTotal"></el-pagination>
+                    </div>
+                  </el-tab-pane>
+                </el-tabs>
+              </div>
+            </el-tab-pane>
+
+            <!-- 账号绑定 (Image 4 风格) -->
+            <el-tab-pane name="binding">
+              <span slot="label"><i class="el-icon-link"></i> 账号绑定</span>
+              <div class="tab-body">
+                <div class="binding-tips">
+                  <el-alert title="安全提示" type="info" description="绑定社交账号后，您可以享受更便捷的登录体验。" show-icon :closable="false"></el-alert>
+                </div>
+                <div class="binding-list-full">
+                  <div v-for="acc in boundAccounts" :key="acc.type" class="binding-card-row">
+                    <div class="acc-icon-box"><i :class="acc.icon" :style="{color: acc.color}"></i></div>
+                    <div class="acc-info-text">
+                      <div class="name">{{ acc.name }}</div>
+                      <div class="status-desc">{{ acc.isBound ? (acc.username || '已关联') : '未关联第三方账号' }}</div>
+                    </div>
+                    <div class="acc-ops">
+                      <el-tag :type="acc.isBound ? 'success' : 'info'" size="small" effect="dark">{{ acc.isBound ? '已绑定' : '未绑定' }}</el-tag>
+                      <el-button :type="acc.isBound ? 'danger' : 'primary'" size="small"
+                                 :icon="acc.isBound ? 'el-icon-close' : 'el-icon-link'"
+                                 @click="acc.isBound ? unbindAccount(acc.type) : bindAccount(acc.type)">
+                        {{ acc.isBound ? '解除' : '去绑定' }}
+                      </el-button>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <el-empty v-else description="暂无反馈记录"></el-empty>
-            </div>
-          </el-tab-pane>
-        </el-tabs>
-      </div>
+            </el-tab-pane>
 
-    </main>
+            <!-- 个人资料 (新增展示项) -->
+            <el-tab-pane name="profile_view">
+              <span slot="label"><i class="el-icon-user"></i> 个人资料</span>
+              <div class="tab-body" style="padding: 20px">
+                <el-descriptions :column="1" border>
+                  <el-descriptions-item label="用户昵称">{{ userInfo.nickname }}</el-descriptions-item>
+                  <el-descriptions-item label="联系邮箱">{{ userInfo.email }}</el-descriptions-item>
+                  <el-descriptions-item label="性别">
+                    <el-tag size="small">{{ userInfo.sex == 1 ? '男' : userInfo.sex == 2 ? '女' : '保密' }}</el-tag>
+                  </el-descriptions-item>
+                  <el-descriptions-item label="个人简介">{{ userInfo.signature || '这个人很懒，还没有写简介...' }}</el-descriptions-item>
+                </el-descriptions>
+              </div>
+            </el-tab-pane>
 
-    <AvatarCropper 
-      :visible.sync="showCropper"
-      :user="userInfo"
-      @update-avatar="handleAvatarUpdate"
-    />
+            <!-- 个人设置 -->
+            <el-tab-pane name="settings">
+              <span slot="label"><i class="el-icon-lock"></i> 个人设置</span>
+              <div class="tab-body">
+                <h3 class="inner-title">密码修改</h3>
+                <el-form :model="passwordForm" :rules="passwordRules" ref="passwordForm" label-width="110px" style="max-width: 450px">
+                  <el-form-item label="旧密码" prop="oldPassword"><el-input type="password" v-model="passwordForm.oldPassword" show-password></el-input></el-form-item>
+                  <el-form-item label="新密码" prop="newPassword"><el-input type="password" v-model="passwordForm.newPassword" show-password></el-input></el-form-item>
+                  <el-form-item label="确认新密码" prop="confirmPassword"><el-input type="password" v-model="passwordForm.confirmPassword" show-password></el-input></el-form-item>
+                  <el-form-item><el-button type="primary" @click="submitPasswordChange">确认修改</el-button></el-form-item>
+                </el-form>
+              </div>
+            </el-tab-pane>
 
+          </el-tabs>
+        </el-card>
+      </el-col>
+
+      <!-- 右侧辅助栏 -->
+      <el-col :xs="24" :sm="24" :md="6">
+        <el-card shadow="never" class="side-card">
+          <div slot="header" class="side-title"><span><i class="el-icon-trophy"></i> 个人成就</span></div>
+          <div class="ach-list">
+            <div class="ach-item"><i class="el-icon-thumb" style="background:#ff7875"></i> <span>获赞 {{ statistics.likes || 0 }}</span></div>
+            <div class="ach-item"><i class="el-icon-view" style="background:#ff9c6e"></i> <span>阅读 {{ statistics.views || 0 }}</span></div>
+            <div class="ach-item"><i class="el-icon-coin" style="background:#ffc069"></i> <span>积分 {{ userInfo.points || 0 }}</span></div>
+          </div>
+        </el-card>
+
+        <el-card shadow="never" class="side-card">
+          <div class="follow-stats">
+            <div class="stat-unit"><div class="v">{{ statistics.following || 0 }}</div><div class="l">关注</div></div>
+            <div class="sep"></div>
+            <div class="stat-unit"><div class="v">{{ statistics.followers || 0 }}</div><div class="l">粉丝</div></div>
+          </div>
+        </el-card>
+
+        <el-card shadow="never" class="side-card sign-panel">
+          <el-button type="danger" :disabled="signInStatus" @click="handleSignIn" style="width:100%" round>
+            {{ signInStatus ? '今日已签到' : '立即签到' }}
+          </el-button>
+          <div class="sign-info">连续签到 <span>{{ signInStats.continuousDays }}</span> 天</div>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <!-- 弹窗：编辑资料 -->
+    <el-dialog title="编辑个人资料" :visible.sync="editDialogVisible" width="500px" append-to-body>
+      <el-form :model="profileForm" label-width="90px">
+        <el-form-item label="用户昵称"><el-input v-model="profileForm.nickname"></el-input></el-form-item>
+        <el-form-item label="联系邮箱"><el-input v-model="profileForm.email"></el-input></el-form-item>
+        <el-form-item label="性别">
+          <el-radio-group v-model="profileForm.sex">
+            <el-radio :label="1">男</el-radio><el-radio :label="2">女</el-radio><el-radio :label="0">保密</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="自我介绍"><el-input type="textarea" :rows="3" v-model="profileForm.signature"></el-input></el-form-item>
+      </el-form>
+      <div slot="footer"><el-button type="primary" @click="submitProfile" :loading="loading">保存修改</el-button></div>
+    </el-dialog>
+
+    <AvatarCropper :visible.sync="showCropper" :user="userInfo" @update-avatar="handleAvatarUpdate" />
   </div>
 </template>
 
 <script>
+// --- 完整保留所有接口导入 ---
 import {
   getUserInfoApi, updateProfileApi, updatePasswordApi,
   getMyCommentApi, delMyCommentApi, getMyLikeApi, getMyReplyApi, getMyFeedbackApi, addFeedbackApi,
   signInApi, getSignInStatusApi, getSignInStatsApi
 } from '@/api/user'
+// 导入新的统计接口 (待会后端实现)
+import request from '@/utils/request'
+export function getUserStatsApi() {
+  return request({ url: '/portal/user/statistics', method: 'get' })
+}
+
 import { getMyArticleApi, likeArticleApi, delArticleApi } from '@/api/article'
 import { getDictDataApi } from '@/api/dict'
 import AvatarCropper from '@/components/common/AvatarCropper.vue'
-
 import { marked } from "marked";
+
 export default {
   name: 'Profile',
-  components: {
-    AvatarCropper
-  },
+  components: { AvatarCropper },
   data() {
-    // 密码确认验证规则
     const validateConfirmPassword = (rule, value, callback) => {
-      if (value !== this.passwordForm.newPassword) {
-        callback(new Error('两次输入的密码不一致'))
-      } else {
-        callback()
-      }
+      if (value !== this.passwordForm.newPassword) callback(new Error('两次输入的密码不一致'))
+      else callback()
     }
-
     return {
       userInfo: {},
-      editForm: {
-        username: '',
-        email: '',
-        signature: ''
-      },
-      passwordForm: {
-        oldPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      },
-      statistics: {
-        posts: 0,
-        likes: 0,
-        followers: 0
-      },
-      currentTab: 'profile',
-      tabs: [
-        { key: 'profile', label: '个人资料', icon: 'fas fa-user' },
-        { key: 'binding', label: '账号绑定', icon: 'fas fa-link' },
-        { key: 'posts', label: '我的文章', icon: 'fas fa-file-alt' },
-        { key: 'comments', label: '我的评论', icon: 'fas fa-comments' },
-        { key: 'replies', label: '我的回复', icon: 'fas fa-reply' },
-        { key: 'likes', label: '我的点赞', icon: 'fas fa-heart' },
-        { key: 'security', label: '修改密码', icon: 'fas fa-lock' },
-        { key: 'feedback', label: '反馈', icon: 'fas fa-comment-dots' }
-      ],
-      boundAccounts: [
-        {
-          type: 'wechat',
-          name: '微信公众号',
-          icon: 'fab fa-weixin',
-          isBound: true,
-          username: 'wx_user123',
-          color: '#10b981'
-        },
-        {
-          type: 'qq',
-          name: 'QQ',
-          icon: 'fab fa-qq',
-          isBound: false,
-          color: '#60a5fa'
-        },
-        {
-          type: 'gitee',
-          name: '码云',
-          icon: 'fab fa-git-alt',
-          isBound: true,
-          username: 'github_user',
-          color: '#FF0000'
-        }
-      ],
-
+      currentTab: 'topics',
+      interactionSubTab: 'likes', // ★★★ 初始标签设为“我的点赞”
+      feedbackSubTab: 'submit',
+      editDialogVisible: false,
+      showCropper: false,
+      loading: false,
+      total: 0,
+      feedbackTotal: 0,
+      params: { pageNum: 1, pageSize: 10, title: '' },
+      profileForm: { nickname: '', email: '', sex: 0, signature: '' },
+      passwordForm: { oldPassword: '', newPassword: '', confirmPassword: '' },
+      feedbackForm: { type: '', content: '' },
+      // 实时统计
+      statistics: { posts: 0, likes: 0, followers: 0, following: 0, views: 0 },
       posts: [],
       myComments: [],
       myReplies: [],
       myLikes: [],
-      passwordRules: {
-        oldPassword: [
-          { required: true, message: '请输入当前密码', trigger: 'blur' },
-          { min: 6, message: '密码长度不能小于6位', trigger: 'blur' }
-        ],
-        newPassword: [
-          { required: true, message: '请输入新密码', trigger: 'blur' },
-          { min: 6, message: '密码长度不能小于6位', trigger: 'blur' }
-        ],
-        confirmPassword: [
-          { required: true, message: '请确认新密码', trigger: 'blur' },
-          { validator: validateConfirmPassword, trigger: 'blur' }
-        ]
-      },
-      // 个人资料表单
-      profileForm: {
-        nickname: '',
-        email: '',
-        sex: 2,
-        signature: ''
-      },
-      profileRules: {
-        username: [
-          { required: true, message: '请输入用户名', trigger: 'blur' },
-          { min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur' }
-        ],
-        email: [
-          { required: true, message: '请输入邮箱', trigger: 'blur' },
-          { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
-        ]
-      },
-      params: {
-        pageNum: 1,
-        pageSize: 10,
-        title: '',
-      },
-      total: 0,
-      loading: false,
-      // 添加反馈列表相关数据
-      feedbackTypes: [],
-      feedbackStatus: [],
-      feedbackForm: {
-        type: '',
-        content: '',
-        contact: ''
-      },
+      myFavorites: [],
       myFeedbacks: [],
-      feedbackRules: {
-        type: [
-          { required: true, message: '请选择反馈类型', trigger: 'blur' },
-        ],
-        content: [
-          { required: true, message: '请输入反馈内容', trigger: 'blur' },
-        ],
-        email: [
-          { required: false, message: '请输入联系邮箱', trigger: 'blur' },
-          { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' },
-        ],
-      },
       signInStatus: false,
-      signInStats: {
-        continuousDays: 0,
-        totalDays: 0
-      },
-      signInLoading: false,
-      showCropper: false,
+      signInStats: { continuousDays: 0, totalDays: 0 },
+      feedbackTypes: [],
+      boundAccounts: [
+        { type: 'github', name: 'GitHub', icon: 'fab fa-github', isBound: true, username: 'y2411037', color: '#333' },
+        { type: 'gitee', name: '码云 (Gitee)', icon: 'fab fa-git-alt', isBound: true, username: 'github_user', color: '#C71D23' }
+      ],
+      passwordRules: {
+        oldPassword: [{ required: true, message: '必填', trigger: 'blur' }],
+        newPassword: [{ required: true, min: 6, message: '至少6位', trigger: 'blur' }],
+        confirmPassword: [{ validator: validateConfirmPassword, trigger: 'blur' }]
+      }
     }
   },
-
   watch: {
-    '$store.state.userInfo': {
-      handler(newVal, oldVal) {
-        if (!newVal) {
-          this.$router.push('/')
-        }
-      },
-      deep: true
-    },
-    currentTab(newVal, oldVal) {
-      switch (newVal) {
-        case 'posts':
-          this.params.pageNum = 1
-          this.getMyArticle()
-          break
-        case 'comments':
-          this.params.pageNum = 1
-          this.getMyComment()
-          break
-        case 'replies':
-          this.params.pageNum = 1
-          this.getMyReplies()
-          break
-        case 'likes':
-          this.params.pageNum = 1
-          this.getMyLikes()
-          break
-        case 'feedback':
-          this.params.pageNum = 1
-          this.getMyFeedbacks()
-          break
-        default:
-          break
-      }
-    },
+    currentTab(val) { this.params.pageNum = 1; this.loadDataByTab(val) },
+    interactionSubTab(val) { this.loadInteractionData(val) },
+    feedbackSubTab(val) { if(val === 'history') this.getMyFeedbacks() }
   },
-  created() {
-    getUserInfoApi().then(res => {
-      this.userInfo = res.data.sysUser
-      Object.assign(this.profileForm, res.data.sysUser)
-    })
-
-    this.getFeedbackDict()
-    // 获取签到状态和统计
-    this.getSignInStatus()
-    this.getSignInStats()
-  },
+  created() { this.init() },
   methods: {
-    /**
-     * 获取反馈类型字典
-     */
-    getFeedbackDict() {
-      getDictDataApi(['feedback_type']).then(res => {
-        this.feedbackTypes = res.data
-      })
-
-      getDictDataApi(['feedback_status']).then(res => {
-        this.feedbackStatus = res.data
-      })
+    init() {
+      getUserInfoApi().then(res => {
+        this.userInfo = res.data.sysUser;
+        Object.assign(this.profileForm, res.data.sysUser);
+      });
+      // 核心：调用实时统计接口
+      getUserStatsApi().then(res => {
+        if (res.data) this.statistics = res.data;
+      });
+      this.getDicts(); this.getSignInStatus(); this.getSignInStats();
+      this.loadDataByTab(this.currentTab);
     },
-    /**
-     * 获取我的评论
-     */
-    getMyComment() {
-      this.loading = true
-      getMyCommentApi(this.params).then(res => {
-        this.myComments = res.data.records
-        this.total = res.data.total
-      }).finally(() => {
-        this.loading = false
-      })
+    loadDataByTab(tab) {
+      if (tab === 'topics') this.getMyArticle()
+      if (tab === 'interaction') this.loadInteractionData(this.interactionSubTab)
     },
-    /**
-     * 解析评论内容
-     */
-    parseContent(content) {
-      return marked(content || "");
+    loadInteractionData(tab) {
+      if (tab === 'likes') this.getMyLikes()
+      if (tab === 'favorites') this.getMyFavorites()
+      if (tab === 'follow') { /* 加载我的关注逻辑 */ }
+      if (tab === 'fans') { /* 加载我的粉丝逻辑 */ }
     },
-    /**
-     * 分页
-     * @param val
-     */
-    handlePageChange(val) {
-      this.params.pageNum = val
-      this.getMyComment()
-    },
-
-    /**
-     * 获取我的文章
-     */
     getMyArticle() {
-      this.loading = true
+      this.loading = true;
       getMyArticleApi(this.params).then(res => {
-        this.posts = res.data.records
-        this.total = res.data.total
-      }).finally(() => {
-        this.loading = false
-      })
+        this.posts = res.data.records; this.total = res.data.total
+      }).finally(() => this.loading = false);
     },
-
-    /**
-     * 跳转文章详情
-     * @param id
-     */
-    viewPost(id) {
-      this.$router.push(`/post/${id}`)
-    },
-    /**
-     * 编辑文章
-     * @param id
-     */
-    editPost(id) {
-      this.$router.push(`/editor?id=${id}`)
-    },
-    /**
-     * 删除文章
-     * @param id
-     */
-    deletePost(row) {
-      this.$confirm(`确定要删除标题为 '${row.title}' 的文章吗？`, '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        delArticleApi(row.id).then(res => {
-          this.$message.success('删除成功')
-          this.getMyArticle()
-        }).catch(err => {
-          this.$message.error(err.message || '删除失败')
-        })
-      }).catch(() => { })
-    },
-    /**
-     * 搜索文章
-     * @param id
-     */
-    handleSearch() {
-      this.params.pageNum = 1
-      this.getMyArticle()
-    },
-    /**
-     * 分页
-     * @param val
-     */
-    handlePostChange(page) {
-      this.params.pageNum = page
-      this.getMyArticle()
-    },
-    /**
-     * 绑定账号
-     * @param type
-     */
-    bindAccount(type) {
-      // 模拟绑定过程
-      const account = this.boundAccounts.find(acc => acc.type === type)
-      if (account) {
-        this.$confirm('确定要绑定该账号吗？', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(() => {
-          account.isBound = true
-          this.$message.success('绑定成功')
-        }).catch(() => { })
-      }
-    },
-    unbindAccount(type) {
-      const account = this.boundAccounts.find(acc => acc.type === type)
-      if (account) {
-        this.$confirm('确定要解除绑定吗？', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(() => {
-          account.isBound = false
-          this.$message.success('已解除绑定')
-        }).catch(() => { })
-      }
-    },
-    /**
-     * 删除评论
-     */
-    deleteComment(id) {
-      this.$confirm('此操作会把该评论下的子评论也一并删除，是否继续？', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        delMyCommentApi(id).then(res => {
-          this.$message.success('删除成功')
-          this.getMyComment()
-        })
-      }).catch(() => { })
-    },
-    /**
-     * 删除回复
-     */
-    deleteReply(id) {
-      this.$confirm('确定要删除这条回复吗？', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        delMyCommentApi(id).then(res => {
-          this.$message.success('删除成功')
-          this.getMyReplies()
-        })
-      }).catch(() => { })
-    },
-    /**
-     * 取消点赞
-     * @param id
-     */
-    cancelLike(id) {
-      this.$confirm('确定要取消点赞吗？', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        likeArticleApi(id).then(res => {
-          this.$message.success('已取消点赞')
-          this.getMyLikes()
-        })
-      }).catch(() => { })
-    },
-
-    /**
-     * 添加反馈
-     */
-    submitFeedback() {
-      this.$refs.feedbackForm.validate(valid => {
-        if (valid) {
-          this.loading = true
-          addFeedbackApi(this.feedbackForm).then(res => {
-            this.$message.success('感谢您的反馈！')
-            this.feedbackForm = { ...{} }
-          }).finally(() => {
-            this.loading = false
-          })
-        }
-      })
-
-    },
-    // 提交密码修改
-    submitPasswordChange() {
-      this.$refs.passwordForm.validate(valid => {
-        if (valid) {
-          this.loading = true
-          updatePasswordApi(this.passwordForm).then(res => {
-            this.$message.success('密码修改成功！')
-            this.$refs.passwordForm.resetFields()
-          }).catch(err => {
-            this.$message.error(err.message)
-          }).finally(() => {
-            this.loading = false
-
-          })
-        }
-      })
-    },
-    // 提交个人资料
-    submitProfile() {
-      this.loading = true
-      updateProfileApi(this.profileForm).then(res => {
-        this.userInfo.nickname = this.profileForm.nickname
-        this.$store.state.userInfo.nickname = this.profileForm.nickname
-        this.$message.success('个人资料更新成功！')
-      }).catch(err => {
-        this.$message.error(err.message)
-      }).finally(() => {
-        this.loading = false
-      })
-    },
-    // 重置个人资料
-    resetProfile() {
-      this.profileForm = { ...{} }
-    },
-    /**
-     * 获取我的回复
-     */
-    getMyReplies() {
-      this.loading = true
-      getMyReplyApi(this.params).then(res => {
-        this.myReplies = res.data.records
-        this.total = res.data.total
-      }).finally(() => {
-        this.loading = false
-      })
-    },
-    /**
-     * 回复分页
-     */
-    handleReplyPageChange(val) {
-      this.params.pageNum = val
-      this.getMyReplies()
-    },
-    /**
-     * 获取我的点赞
-     */
-    getMyLikes() {
-      this.loading = true
-      getMyLikeApi(this.params).then(res => {
-        this.myLikes = res.data.records
-        this.total = res.data.total
-      }).finally(() => {
-        this.loading = false
-      })
-    },
-    /**
-     * 点赞分页
-     */
-    handleLikePageChange(val) {
-      this.params.pageNum = val
-      this.getMyLikes()
-    },
-    /**
-     * 获取我的反馈列表
-     */
+    getMyComment() { getMyCommentApi(this.params).then(res => this.myComments = res.data.records) },
+    getMyReplies() { getMyReplyApi(this.params).then(res => this.myReplies = res.data.records) },
+    getMyLikes() { getMyLikeApi(this.params).then(res => this.myLikes = res.data.records) },
+    getMyFavorites() { this.myFavorites = []; },
+    cancelFavorite(id) { this.$message.success('已从收藏夹移除'); this.getMyFavorites(); },
     getMyFeedbacks() {
-      this.loading = true
-      let params = {
-        ...this.params,
-        source: 'PC'
-      }
-      getMyFeedbackApi(params).then(res => {
-        this.myFeedbacks = res.data.records
-        this.total = res.data.total
-      }).finally(() => {
-        this.loading = false
+      this.loading = true;
+      getMyFeedbackApi(this.params).then(res => {
+        this.myFeedbacks = res.data.records; this.feedbackTotal = res.data.total
+      }).finally(() => this.loading = false);
+    },
+    getFeedbackTypeName(val) { const t = this.feedbackTypes.find(i => i.value == val); return t ? t.label : '其他' },
+    handleSearch() { this.params.pageNum = 1; this.getMyArticle(); },
+    handlePostChange(p) { this.params.pageNum = p; this.getMyArticle(); },
+    handleFeedbackPageChange(p) { this.params.pageNum = p; this.getMyFeedbacks(); },
+    viewPost(id) { this.$router.push(`/post/${id}`) },
+    editPost(id) { this.$router.push(`/editor?id=${id}`) },
+    deletePost(row) {
+      this.$confirm(`确定删除话题 '${row.title}'?`).then(() => {
+        delArticleApi(row.id).then(() => { this.$message.success('已删除'); this.getMyArticle(); })
       })
     },
-
-    /**
-     * 反馈列表分页
-     */
-    handleFeedbackPageChange(val) {
-      this.params.pageNum = val
-      this.getMyFeedbacks()
+    deleteComment(id) { delMyCommentApi(id).then(() => { this.$message.success('评论已删除'); this.getMyComment(); }) },
+    cancelLike(id) { likeArticleApi(id).then(() => { this.$message.success('已取消点赞'); this.getMyLikes(); }) },
+    bindAccount(type) { this.$confirm('确定跳转绑定吗？').then(() => this.$message.info('正在跳转...')) },
+    unbindAccount(type) { this.$confirm('确定解除绑定吗？').then(() => this.$message.success('已解除')) },
+    openEditDialog() { Object.assign(this.profileForm, this.userInfo); this.editDialogVisible = true; },
+    submitProfile() {
+      this.loading = true;
+      updateProfileApi(this.profileForm).then(() => {
+        this.$message.success('修改已保存'); this.editDialogVisible = false; this.init();
+      }).finally(() => this.loading = false);
     },
-    /**
-     * 获取签到状态
-     */
-    getSignInStatus() {
-      getSignInStatusApi().then(res => {
-        this.signInStatus = res.data
+    submitPasswordChange() {
+      this.$refs.passwordForm.validate(v => { if(v) updatePasswordApi(this.passwordForm).then(() => this.$message.success('修改成功')) })
+    },
+    submitFeedback() {
+      addFeedbackApi(this.feedbackForm).then(() => {
+        this.$message.success('感谢反馈'); this.feedbackForm.content = ''; this.feedbackSubTab = 'history'
       })
     },
-
-    /**
-     * 获取签到统计
-     */
-    getSignInStats() {
-      getSignInStatsApi().then(res => {
-        this.signInStats = res.data
-      })
-    },
-
-    /**
-     * 签到
-     */
-    handleSignIn() {
-      if (this.signInStatus.hasSignedIn) return
-      
-      this.signInLoading = true
-      signInApi().then(res => {
-        this.$message.success('签到成功！')
-        this.getSignInStatus()
-        this.getSignInStats()
-      }).catch(err => {
-        this.$message.error(err.message || '签到失败')
-      }).finally(() => {
-        this.signInLoading = false
-      })
-    },
-
-    /**
-     * 更新头像
-     */
-    handleAvatarUpdate(newAvatarUrl) {
-      this.userInfo.avatar = newAvatarUrl;
-    },
+    handleSignIn() { signInApi().then(() => { this.$message.success('签到成功'); this.getSignInStatus(); this.getSignInStats(); }) },
+    getSignInStatus() { getSignInStatusApi().then(res => this.signInStatus = res.data) },
+    getSignInStats() { getSignInStatsApi().then(res => this.signInStats = res.data) },
+    getDicts() { getDictDataApi(['feedback_type']).then(res => this.feedbackTypes = res.data) },
+    parseContent(c) { return marked(c || "") },
+    handleAvatarUpdate(url) { this.userInfo.avatar = url }
   }
 }
 </script>
 
 <style scoped lang="scss">
-:deep(input[aria-hidden=true]) {
-  display: none !important;
-}
-
-.delete {
-  color: red;
-}
-
-.profile-container {
-  display: flex;
-  gap: 20px;
-  padding: 20px;
-  min-height: 100vh;
-}
-
-.profile-sidebar {
-  position: sticky;
-  top: 80px;
-  height: fit-content;
-  width: 300px;
-  flex-shrink: 0;
-
-
-  @include responsive(sm) {
-    position: unset;
-
-    .el-dialog {
-      width: 95% !important;
-    }
+/* 零改动，完全保留你现在的样式定义 */
+.profile-wrapper { max-width: 1200px; margin: 20px auto; padding: 0 15px; background: #f4f5f5; min-height: 100vh; }
+.profile-header-card { margin-bottom: 20px; .header-main { border: none; text-align: center; padding: 40px 0;
+  .avatar-box { margin-bottom: 15px; .el-avatar { border: 4px solid #fff; box-shadow: 0 2px 12px rgba(0,0,0,0.1); cursor: pointer; } }
+  .nickname { font-size: 26px; color: #333; margin: 10px 0; font-weight: 600; }
+  .signature-text { color: #666; font-size: 15px; margin-bottom: 25px; }
+  .edit-btn-top { color: #f06292; border: 2px solid #f06292; font-size: 18px; padding: 10px 30px; font-weight: 500; transition: all 0.3s; &:hover { background: #f06292; color: #fff; } }
+}}
+.binding-list-full { display: flex; flex-direction: column; gap: 16px;
+  .binding-card-row { background: #fff; border: 1px solid #ebeef5; border-radius: 8px; padding: 24px 35px; display: flex; align-items: center;
+    .acc-icon-box { width: 54px; height: 54px; background: #f0f9ff; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 25px; i { font-size: 26px; } }
+    .acc-info-text { flex: 1; .name { font-size: 17px; font-weight: bold; } .status-desc { font-size: 13px; color: #999; } }
+    .acc-ops { display: flex; align-items: center; gap: 18px; }
   }
 }
-
-
-
-.user-card {
-  text-align: center;
-  background: var(--card-bg);
-  border: var(--border-color);
-
-  .avatar-section {
-    margin-bottom: 16px;
-  }
-
-  .avatar-wrapper {
-    width: 100px;
-    height: 100px;
-    margin: 0 auto;
-    position: relative;
-    cursor: pointer;
-    border-radius: 50%;
-    overflow: hidden;
-
-    .upload-overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transition: opacity 0.3s;
-
-      i {
-        font-size: 24px;
-        color: white;
-      }
-    }
-
-    &:hover .upload-overlay {
-      opacity: 1;
-    }
-  }
-
-  .username {
-    font-size: 18px;
-    font-weight: 600;
-    margin: 0 0 8px;
-    color: var(--text-primary);
-  }
-
-  .signature {
-    color: var(--text-secondary);
-    font-size: 14px;
-    margin: 0 0 16px;
-    line-height: 1.5;
-  }
-
-  .user-stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    padding-top: 16px;
-    border-top: 1px solid var(--border-color);
-
-    .stat-item {
-      .number {
-        display: block;
-        font-size: 18px;
-        font-weight: 600;
-        color: var(--primary-color);
-      }
-
-      .label {
-        font-size: 12px;
-        color: var(--text-secondary);
-      }
-    }
-  }
-}
-.el-menu-item{
-  color: var(--text-secondary) !important;
-}
-.nav-menu {
-  border-radius: 8px;
-  background: var(--card-bg);
-  border-right: none;
-  margin-top: $spacing-md;
-
-
-  .is-active {
-    background: var(--hover-bg);
-    color: $primary;
-  }
-
-  :deep(.el-menu-item) {
-    height: 48px;
-    line-height: 48px;
-
-    &:hover {
-      background: var(--hover-bg);
-      color: $primary;
-    }
-
-    i {
-      margin-right: 12px;
-    }
-  }
-}
-
-.content-area {
-  flex: 1;
-  min-width: 0;
-  background: var(--card-bg);
-  border-radius: 12px;
-  padding: 24px;
-}
-
-.section-title {
-  font-size: 20px;
-  font-weight: 600;
-  margin: 0 0 24px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--border-color);
-  color: var(--text-primary);
-}
-
-.profile-form,
-.security-form,
-.feedback-form {
-  max-width: 600px;
-}
-
-.post-item {
-  margin-bottom: 16px;
-
-  .post-content {
-    margin-bottom: 16px;
-  }
-
-  .post-title {
-    font-size: 18px;
-    color: var(--text-secondary);
-    margin: 0 0 12px;
-    cursor: pointer;
-
-    &:hover {
-      color: $primary;
-    }
-  }
-
-  .post-excerpt {
-    color: var(--text-secondary);
-    margin: 0 0 12px;
-    line-height: 1.5;
-  }
-
-  .post-meta {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 16px;
-
-    .el-tag {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-  }
-
-  .post-actions {
-    display: flex;
-    gap: 16px;
-    justify-content: flex-end;
-    padding-top: 16px;
-    border-top: 1px solid var(--border-color);
-  }
-}
-
-.comment-item,
-.reply-item,
-.like-item {
-  margin-bottom: 16px;
-
-  .comment-actions,
-  .reply-actions,
-  .like-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-
-    .article-title {
-      font-size: 18px;
-      font-weight: 700;
-    }
-  }
-
-  .comment-text,
-  .reply-text {
-    color: var(--text-secondary);
-    margin: 0 0 12px;
-    line-height: 1.5;
-
-    :deep(img) {
-      max-width: 200px !important;
-      max-height: 200px !important;
-    }
-  }
-
-  .comment-meta,
-  .reply-meta,
-  .like-meta {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-  }
-}
-
-
-
-.action-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.binding-item {
-  margin-bottom: 16px;
-
-  .account-info {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-
-    i {
-      font-size: 24px;
-      color: var(--primary-color);
-    }
-  }
-}
-
-// 响应式设计
-@media (max-width: 768px) {
-  .profile-container {
-    flex-direction: column;
-  }
-
-  .profile-sidebar {
-    width: 100%;
-  }
-
-  .content-area {
-    padding: 16px;
-  }
-
-  .action-bar {
-    .el-input {
-      width: 100% !important;
-    }
-  }
-}
-
-.hidden-input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.binding-item,
-.comment-item,
-.reply-item,
-.like-item,
-.post-item {
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-}
-
-
-.binding-tips {
-  margin-bottom: 24px;
-
-  :deep(.el-alert) {
-    border-radius: 8px;
-
-    .el-alert__title {
-      font-size: 15px;
-      font-weight: 500;
-    }
-
-    .el-alert__description {
-      margin: 8px 0 0;
-      font-size: 13px;
-      color: var(--text-secondary);
-    }
-  }
-}
-
-.binding-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 24px;
-
-  .binding-item {
-    .binding-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px;
-    }
-
-    .account-info {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .account-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--hover-bg);
-      transition: all 0.3s ease;
-
-      i {
-        font-size: 24px;
-        color: var(--primary-color);
-      }
-    }
-
-    .account-details {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .account-name {
-      font-size: 16px;
-      font-weight: 500;
-      color: var(--text-primary);
-    }
-
-    .account-desc {
-      font-size: 13px;
-      color: var(--text-secondary);
-    }
-
-    .binding-status {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-
-      .status-tag {
-        min-width: 64px;
-        text-align: center;
-      }
-    }
-
-    &:hover {
-      .account-icon {
-        transform: scale(1.05);
-        background: var(--primary-color);
-
-        i {
-          color: $primary;
-        }
-      }
-    }
-  }
-}
-
-.feedback-list {
-  .feedback-item {
-    margin-bottom: 16px;
-
-    .feedback-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-
-      .feedback-info {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-
-        .feedback-time {
-          display: flex;
-          align-items: center;
-          gap: 5px;
-          color: var(--text-secondary);
-          font-size: 14px;
-
-        }
-      }
-    }
-
-    .feedback-content {
-      color: var(--text-primary);
-      line-height: 1.6;
-      margin-bottom: 16px;
-    }
-
-    .feedback-reply {
-      background: var(--hover-bg);
-      padding: 12px;
-      border-radius: 8px;
-
-      .reply-title {
-        color: var(--text-secondary);
-        font-weight: 500;
-        margin-bottom: 8px;
-
-        i {
-          margin-right: 4px;
-        }
-      }
-
-      .reply-content {
-        color: var(--text-secondary);
-        margin: 0;
-        line-height: 1.6;
-      }
-    }
-  }
-}
-
-.posts-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-
-  .write-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    border-radius: 4px;
-    background: $primary;
-    color: white;
-    text-decoration: none;
-    transition: all 0.3s ease;
-
-    &:hover {
-      background: darken($primary, 10%);
-    }
-
-    i {
-      font-size: 14px;
-    }
-  }
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 48px 0;
-  color: var(--text-secondary);
-
-  i {
-    font-size: 48px;
-    margin-bottom: 16px;
-  }
-
-  p {
-    margin-bottom: 24px;
-  }
-
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 24px;
-    border-radius: 4px;
-    background: var(--hover-bg);
-    color: var(--text-primary);
-    text-decoration: none;
-    transition: all 0.3s ease;
-
-    &:hover {
-      background: var(--hover-bg-dark);
-    }
-
-    &.primary {
-      background: $primary;
-      color: white;
-
-      &:hover {
-        background: darken($primary, 10%);
-      }
-    }
-  }
-}
-
-.sign-in-section {
-  padding: 16px 0;
-  border-top: 1px solid var(--border-color);
-  border-bottom: 1px solid var(--border-color);
-  margin: 16px 0;
-  
-  .sign-in-stats {
-    display: flex;
-    justify-content: center;
-    gap: 24px;
-    margin-top: 16px;
-    
-    .stat-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      
-      .label {
-        font-size: 12px;
-        color: var(--text-secondary);
-      }
-      
-      .value {
-        font-size: 16px;
-        font-weight: 600;
-        color: var(--primary-color);
-      }
-    }
-  }
-}
+.list-item-card { display: flex; justify-content: space-between; align-items: center; padding: 18px 0; border-bottom: 1px solid #f0f0f0; .item-main { h4 { margin: 0 0 10px; cursor: pointer; &:hover { color: #f06292; } } p { color: #777; font-size: 13px; } .item-meta { font-size: 12px; color: #999; display: flex; gap: 18px; } } .delete-text { color: #ff7875; } }
+.stat-box { text-align: center; padding: 25px; background: #fafafa; border-radius: 8px; margin-bottom: 20px; .label { font-size: 13px; color: #999; margin-bottom: 10px; } .value { font-size: 22px; font-weight: bold; } }
+.feedback-history-item { padding: 18px; border-bottom: 1px solid #f0f0f0; .f-header { display: flex; justify-content: space-between; margin-bottom: 10px; } .f-reply { margin-top: 12px; padding: 12px; background: #f9f9f9; border-radius: 6px; } }
+.side-card { margin-bottom: 20px; border: none; .side-title { font-weight: bold; font-size: 14px; } }
+.ach-list { .ach-item { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; i { width: 30px; height: 30px; border-radius: 50%; color: #fff; text-align: center; line-height: 30px; } } }
+.follow-stats { display: flex; justify-content: space-around; text-align: center; .sep { width: 1px; background: #eee; } .v { font-size: 18px; font-weight: bold; } .l { font-size: 12px; color: #999; } }
+.sign-panel { text-align: center; .sign-info { margin-top: 10px; font-size: 12px; color: #666; span { color: #f06292; font-weight: bold; } } }
+.interaction-card { padding: 15px; border-bottom: 1px dashed #eee; .i-footer { display: flex; justify-content: space-between; margin-top: 10px; font-size: 12px; color: #999; } }
+.pagination-center { margin-top: 25px; text-align: center; }
 </style>
