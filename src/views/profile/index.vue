@@ -57,22 +57,6 @@
               </div>
             </el-tab-pane>
 
-            <!-- 我的数据 (实时联动接口) -->
-            <el-tab-pane name="data">
-              <span slot="label"><i class="el-icon-data-line"></i> 我的数据</span>
-              <div class="tab-body data-panel">
-                <el-row :gutter="20">
-                  <el-col :span="6" v-for="d in liveDataStats" :key="d.label">
-                    <div class="stat-box">
-                      <div class="label">{{ d.label }}</div>
-                      <div class="value">{{ d.value }}</div>
-                    </div>
-                  </el-col>
-                </el-row>
-                <el-empty description="更详尽的数据报表统计中..."></el-empty>
-              </div>
-            </el-tab-pane>
-
             <!-- 我的互动 (精准改动点：优化标签顺序) -->
             <el-tab-pane name="interaction">
               <span slot="label"><i class="el-icon-set-up"></i> 我的互动</span>
@@ -283,7 +267,7 @@ import {
 // 导入新的统计接口 (待会后端实现)
 import request from '@/utils/request'
 export function getUserStatsApi() {
-  return request({ url: '/protal/user/statistics', method: 'get' })
+  return request({ url: '/portal/user/statistics', method: 'get' })
 }
 
 import { getMyArticleApi, likeArticleApi, delArticleApi } from '@/api/article'
@@ -333,16 +317,6 @@ export default {
         newPassword: [{ required: true, min: 6, message: '至少6位', trigger: 'blur' }],
         confirmPassword: [{ validator: validateConfirmPassword, trigger: 'blur' }]
       }
-    }
-  },
-  computed: {
-    liveDataStats() {
-      return [
-        { label: '话题总数', value: this.statistics.posts || 0 },
-        { label: '获赞总数', value: this.statistics.likes || 0 },
-        { label: '全站阅读', value: this.statistics.views || 0 },
-        { label: '签到总天数', value: this.signInStats.totalDays || 0 }
-      ]
     }
   },
   watch: {

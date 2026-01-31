@@ -108,7 +108,7 @@ export function getRecommendArticlesApi() {
 }
 
 /**
- * 点赞
+ * 点赞接口
  */
 export function likeArticleApi(id) {
     return request({
@@ -118,7 +118,29 @@ export function likeArticleApi(id) {
 }
 
 /**
- * 获取的文章
+ * ★ 修改：收藏接口
+ * 路径修改为 DatasetFrontController 定义的 /api/front/dataset/fav/
+ */
+export function favArticleApi(id) {
+    return request({
+        url: `/api/front/dataset/fav/${id}`,
+        method: 'get'
+    })
+}
+
+/**
+ * ★ 修改：关注作者接口
+ * 路径修改为 DatasetFrontController 定义的 /api/front/dataset/follow/
+ */
+export function followUserApi(id) {
+    return request({
+        url: `/api/front/dataset/follow/${id}`,
+        method: 'get'
+    })
+}
+
+/**
+ * 获取我的文章
  */
 export function getMyArticleApi(params) {
     return request({
@@ -140,7 +162,6 @@ export function delArticleApi(id) {
 
 /**
  * 创建文章
- * @param {Object} data 文章数据
  */
 export function createArticleApi(data) {
     return request({
@@ -151,7 +172,7 @@ export function createArticleApi(data) {
 }
 
 /**
- * 获取文章详情
+ * 获取后台文章详情
  */
 export function getArticleInfoApi(id) {
     return request({
@@ -162,7 +183,6 @@ export function getArticleInfoApi(id) {
 
 /**
  * 更新文章
- * @param {Object} data 文章数据
  */
 export function updateArticleApi(data) {
     return request({
@@ -172,10 +192,23 @@ export function updateArticleApi(data) {
     })
 }
 
-// ★★★ 新增：获取科学数据集详情 (对应 DatasetFrontController) ★★★
+/**
+ * 获取科学数据集详情
+ */
 export function getDatasetDetailApi(id) {
     return request({
         url: `/api/front/dataset/get/${id}`,
+        method: 'get'
+    })
+}
+
+/**
+ * ★ 新增：数据集下载量加一接口
+ * 路径对应 DatasetFrontController 中的 /api/front/dataset/download/{id}
+ */
+export function downloadDatasetApi(id) {
+    return request({
+        url: `/api/front/dataset/download/${id}`,
         method: 'get'
     })
 }
