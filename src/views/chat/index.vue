@@ -2287,10 +2287,10 @@ export default {
             user-select: none;
             color: var(--text-secondary);
             .user-name {
-              color: red;
+              color: #b77a71;
             }
             .assistant-name {
-              color: #b32ce9;
+              color: #8d78b8;
             }
           }
           .gender{
@@ -2545,7 +2545,7 @@ export default {
       color: #f5222d;
     }
     .fa-search {
-      color: #1890ff;
+      color: #6F8FA8;
     }
   }
 }
@@ -2565,7 +2565,7 @@ export default {
 }
 
 .assistant-tag {
-  background: #b32ce9;
+  background: #8d78b8;
   color: white;
   font-size: 12px;
   padding: 1px 6px;
@@ -2709,7 +2709,7 @@ export default {
 
     i {
       font-size: 1.2em;
-      color: #1890ff;
+      color: #6F8FA8;
     }
 
     span {

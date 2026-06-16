@@ -1,5 +1,23 @@
 import request from '@/utils/request'
 
+function getLocalUser() {
+    const raw = sessionStorage.getItem('user') || localStorage.getItem('userInfo')
+    if (!raw) return {}
+    try {
+        return JSON.parse(raw)
+    } catch (err) {
+        return {}
+    }
+}
+
+function success(data) {
+    return Promise.resolve({
+        code: 200,
+        message: 'success',
+        data
+    })
+}
+
 /**
  * 获取用户信息的API函数
  */
@@ -16,11 +34,13 @@ export function getUserInfoApi() {
  * @returns 
  */
 export function updateProfileApi(data) {
-    return request({
-        url: '/protal/user/updateProfile',
-        method: 'put',
-        data
-    })
+    const nextUser = {
+        ...getLocalUser(),
+        ...data
+    }
+    localStorage.setItem('userInfo', JSON.stringify(nextUser))
+    sessionStorage.setItem('user', JSON.stringify(nextUser))
+    return success(nextUser)
 }
 
 /**
@@ -38,43 +58,28 @@ export function updatePasswordApi(data) {
  * 获取我的评论
  */
 export function getMyCommentApi(params) {
-    return request({
-        url: '/protal/user/comment',
-        method: 'get',
-        params
-    })
+    return success({ records: [], total: 0 })
 }
 
 /**
  * 删除我的评论
  */
 export function delMyCommentApi(id) {
-    return request({
-        url: `/protal/user/delMyComment/${id}`,
-        method: 'delete'
-    })
+    return success(true)
 }
 
 /**
  * 获取我的回复
  */
 export function getMyReplyApi(params) {
-    return request({
-        url: '/protal/user/myReply',
-        method: 'get',
-        params
-    })
+    return success({ records: [], total: 0 })
 }
 
 /**
  * 获取我的点赞
  */
 export function getMyLikeApi(params) {
-    return request({
-        url: '/protal/user/myLike',
-        method: 'get',
-        params
-    })
+    return success({ records: [], total: 0 })
 }
 
 /**
@@ -103,32 +108,21 @@ export function addFeedbackApi(data) {
  * 签到
  */
 export function signInApi() {
-    return request({
-        url: '/sign/',
-        method: 'get'
-    })
+    return success({ signed: true })
 }
 
 /**
  * 获取签到状态
  */
 export function getSignInStatusApi() {
-    return request({
-        url: '/sign/isSignedToday',
-        method: 'get'
-    })
+    return success(false)
 }
 
 /**
  * 获取签到统计
  */
 export function getSignInStatsApi() {
-    return request({
-        url: '/sign/getSignDays',
-        method: 'get'
-    })
+    return success({ signDays: 0, continuousDays: 0 })
 }
-
-
 
 

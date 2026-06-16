@@ -17,7 +17,8 @@
 import TheHeader from '@/layout/Header/index.vue'
 import TheFooter from '@/layout/Footer/index.vue'
 import FloatingButtons from '@/components/common/FloatingButtons.vue'
-import { getWebConfigApi, reportApi,getNoticeApi } from '@/api/site'
+// 注释掉原项目不存在的接口，消除404
+// import { getWebConfigApi, reportApi,getNoticeApi } from '@/api/site'
 import { mapActions } from 'vuex'
 import { initTheme } from '@/utils/theme'
 import SearchDialog from '@/components/Search/index.vue'
@@ -41,20 +42,23 @@ export default {
   },
 
   async created() {
-    await reportApi()
-    const res = await getWebConfigApi()
-    this.setSiteInfo(res.data)
-    this.$store.commit('setVisitorAccess', res.extra.visitorCount)
-    this.$store.commit('setSiteAccess', res.extra.blogViewsCount)
+    // 注释掉不存在的接口调用，彻底消除404
+    // await reportApi()
+    // const res = await getWebConfigApi()
+    // this.setSiteInfo(res.data)
+    // this.$store.commit('setVisitorAccess', res.extra.visitorCount)
+    // this.$store.commit('setSiteAccess', res.extra.blogViewsCount)
 
-    const noticeRes = await getNoticeApi()
-    this.$store.commit('SET_NOTICE', noticeRes.data)
+    // const noticeRes = await getNoticeApi()
+    // this.$store.commit('SET_NOTICE', noticeRes.data)
+
+    // 保留你的系统需要的核心功能
     initTheme()
     await this.handleThirdPartyLogin()
-    //这里等待第三方登录处理完成在获取用户信息
+    // 等待第三方登录处理完成再获取用户信息
     await this.getUserInfo();
 
-    //跳转到缓存地址
+    // 跳转到缓存地址
     let url = getCookie('redirectUrl')
     if (url) {
       removeCookie('redirectUrl')
@@ -67,7 +71,7 @@ export default {
     /**
      * 处理第三方登录用回调逻辑
      */
-     async handleThirdPartyLogin() {
+    async handleThirdPartyLogin() {
       let flag = window.location.href.indexOf("token") != -1;
       if (flag) {
         let token = window.location.href.split("token=")[1];
@@ -121,13 +125,13 @@ export default {
 </script>
 
 <style lang="scss">
-
 @import 'animate.css';
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@400;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 * {
   margin: 0;
   padding: 0;
-  font-family: "font";
+  font-family: "Space Grotesk", "Microsoft YaHei", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   box-sizing: border-box;
 }
 </style>

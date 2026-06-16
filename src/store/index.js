@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import { loginApi,logoutApi,getUserInfoApi } from '@/api/auth'
+import { loginApi } from '@/api/auth'
 import { getToken, setToken, removeToken } from '@/utils/cookie'
 
 Vue.use(Vuex)
@@ -8,6 +8,9 @@ export default new Vuex.Store({
   state: {
     userInfo: sessionStorage.getItem("user") ? JSON.parse(sessionStorage.getItem("user")) : null,
     webSiteInfo: {
+      name: '大学生竞赛管理系统',
+      logo: '/images/pds.jpg',
+      touristAvatar: '/images/visible.jpg',
       showList:[]
     },
     token: getToken() || '',
@@ -29,7 +32,11 @@ export default new Vuex.Store({
     },
     SET_USER_INFO(state, userInfo) {
       state.userInfo = userInfo
-      sessionStorage.setItem("user", JSON.stringify(userInfo))
+      if (userInfo) {
+        sessionStorage.setItem("user", JSON.stringify(userInfo))
+      } else {
+        sessionStorage.removeItem("user")
+      }
     },
 
     SET_SEARCH_VISIBLE(state, visible) {
@@ -73,9 +80,13 @@ export default new Vuex.Store({
      * 获取用户信息
      */
     async getUserInfo({ commit }) {
-      if(getToken()){
-        const res = await getUserInfoApi()
-        commit('SET_USER_INFO', res.data)
+      const localUser = sessionStorage.getItem("user") || localStorage.getItem("userInfo")
+      if (localUser) {
+        try {
+          commit('SET_USER_INFO', JSON.parse(localUser))
+        } catch (err) {
+          commit('SET_USER_INFO', null)
+        }
       }
     },
 
@@ -100,8 +111,9 @@ export default new Vuex.Store({
      * 退出登录
      */
     async logout({ commit }) {
-      await logoutApi()
       removeToken()
+      localStorage.removeItem('userInfo')
+      sessionStorage.removeItem('user')
       commit('SET_USER_INFO', null)
     },
 

@@ -4,7 +4,7 @@
 
 #app {
   min-height: 100vh;
-  padding-top: 70px;
+  padding-top: 76px;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -46,6 +46,11 @@
 .app-content {
   min-height: calc(100vh - 80px);
   width: 100%;
+}
+
+body {
+  background: #F5F5F0;
+  color: var(--text-primary);
 }
 
 /* 全局滚动条样式 */
@@ -108,6 +113,7 @@
 .logo-text,
 .menu-item {
   font-family: "font" !important;
+  font-family: "Space Grotesk", "Microsoft YaHei", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
 }
 
 /* 添加图标特殊规则 */
@@ -195,9 +201,23 @@
   --input-bg: #{$surface};
   --surface-rgb: 255, 255, 255;
   --border-color-rgb: 0, 0, 0;
-  --about-me: linear-gradient(135deg, #409efff2, #a855f7f2);
+  --about-me: linear-gradient(135deg, #b8c9dcf2, #d6cde8f2);
   --reply-message-bg: #f9f6f6;
   --resources-bg: linear-gradient(135deg, #f8faff 0%, #f1f5ff 100%);
+  --capsule-cream: #F5F5F0;
+  --capsule-ink: #1A1A1A;
+  --capsule-outline: #1E1E1E;
+  --capsule-coral: #D8A39A;
+  --capsule-lime: #DDE8A5;
+  --capsule-lavender: #D6CDE8;
+  --capsule-sky: #BFD1EA;
+  --capsule-violet: #B8ADD8;
+  --capsule-yellow: #F3E2A7;
+  --capsule-peach: #E8C7AE;
+  --capsule-mint: #C9E6D8;
+  --capsule-shadow: rgba(26, 26, 26, 0.08);
+  --font-display: "Bodoni Moda", Georgia, "Times New Roman", serif;
+  --font-body: "Space Grotesk", "Microsoft YaHei", system-ui, sans-serif;
 }
 
 :root[data-theme='dark'] {

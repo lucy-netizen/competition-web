@@ -1,433 +1,778 @@
 <template>
-  <div class="profile-wrapper">
-    <!-- 1. 顶部个人信息 (参考 Image 3 居中风格) -->
-    <div class="profile-header-card">
-      <el-card shadow="never" class="header-main centered-design">
-        <div class="header-content">
-          <div class="avatar-box">
-            <el-avatar :size="110" :src="userInfo.avatar" @click.native="showCropper = true"></el-avatar>
-          </div>
-          <div class="info-detail">
-            <h2 class="nickname">{{ userInfo.nickname }}</h2>
-            <p class="signature-text">{{ userInfo.signature || '这个人很懒，还没有写简介...' }}</p>
-            <!-- 建议：18px 字体，精致且有存在感 -->
-            <el-button round class="edit-btn-top" @click="openEditDialog">编辑个人资料</el-button>
+  <div class="workbench-page">
+    <section class="workbench-hero glass-panel">
+      <div class="hero-copy">
+        <span class="eyebrow">{{ workbench.role || roleLabel }} Workbench</span>
+        <h1>{{ workbench.title || `${roleLabel}工作台` }}</h1>
+        <p>{{ heroDescription }}</p>
+        <div class="hero-meta">
+          <span><i class="fas fa-calendar-check"></i> 今日工作台</span>
+          <span><i class="fas fa-layer-group"></i> 角色数据聚合</span>
+        </div>
+      </div>
+      <div class="identity-card">
+        <div class="avatar-mark">{{ avatarText }}</div>
+        <div>
+          <strong>{{ workbench.realName || currentUser.realName || currentUser.nickname || currentUser.username || '未登录用户' }}</strong>
+          <span>{{ workbench.username || currentUser.username || 'competition user' }}</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="stats-grid">
+      <article v-for="item in statCards" :key="item.label" class="stat-card glass-panel" :class="item.tone">
+        <div class="stat-icon">
+          <i :class="item.icon"></i>
+        </div>
+        <div>
+          <span>{{ item.label }}</span>
+          <strong>{{ item.value }}</strong>
+          <small>{{ item.hint }}</small>
+        </div>
+      </article>
+    </section>
+
+    <section class="workbench-layout">
+      <main class="main-panel glass-panel">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">Role Actions</span>
+            <h2>当前角色功能</h2>
           </div>
         </div>
-      </el-card>
-    </div>
+        <div class="action-grid">
+          <button
+            v-for="action in actionCards"
+            :key="action.label"
+            class="action-card"
+            @click="goAction(action)"
+          >
+            <i :class="action.icon"></i>
+            <span>
+              <strong>{{ action.label }}</strong>
+              <small>{{ action.desc }}</small>
+            </span>
+            <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
 
-    <!-- 2. 下方分栏布局 -->
-    <el-row :gutter="20" class="main-content-row">
-      <!-- 左侧内容区 (1.10 功能整合) -->
-      <el-col :xs="24" :sm="24" :md="18">
-        <el-card shadow="never" class="content-tabs-card">
-          <el-tabs v-model="currentTab" class="main-tabs">
-
-            <!-- 我的发布 -->
-            <el-tab-pane name="topics">
-              <span slot="label"><i class="el-icon-chat-dot-round"></i> 我的发布</span>
-              <div class="tab-body">
-                <div class="action-bar">
-                  <el-input v-model="params.title" size="mini" placeholder="搜索话题标题..." style="width: 250px; margin-right: 10px"></el-input>
-                  <el-button type="primary" size="mini" icon="el-icon-search" @click="handleSearch">搜索</el-button>
-                  <el-button type="success" size="mini" icon="el-icon-edit" @click="$router.push('/editor')" style="float: right">发布新话题</el-button>
-                </div>
-                <div v-loading="loading" v-if="posts.length">
-                  <div v-for="post in posts" :key="post.id" class="list-item-card">
-                    <div class="item-main">
-                      <h4 @click="viewPost(post.id)">{{ post.title }}</h4>
-                      <p>{{ post.summary }}</p>
-                      <div class="item-meta">
-                        <span><i class="el-icon-time"></i> {{ post.createTime }}</span>
-                        <span><i class="el-icon-view"></i> {{ post.quantity }} 阅读</span>
-                        <span><i class="el-icon-star-off"></i> {{ post.likeNum || 0 }} 点赞</span>
-                      </div>
-                    </div>
-                    <div class="item-actions">
-                      <el-button type="text" size="small" @click="editPost(post.id)">编辑</el-button>
-                      <el-button type="text" size="small" class="delete-text" @click="deletePost(post)">删除</el-button>
-                    </div>
-                  </div>
-                  <div class="pagination-center">
-                    <el-pagination background @current-change="handlePostChange" :current-page="params.pageNum" :page-size="params.pageSize" :total="total" layout="prev, pager, next"></el-pagination>
-                  </div>
-                </div>
-                <el-empty v-else description="暂无话题"></el-empty>
-              </div>
-            </el-tab-pane>
-
-            <!-- 我的互动 (精准改动点：优化标签顺序) -->
-            <el-tab-pane name="interaction">
-              <span slot="label"><i class="el-icon-set-up"></i> 我的互动</span>
-              <div class="tab-body">
-                <el-tabs type="border-card" v-model="interactionSubTab">
-                  <!-- 1. 我的点赞 -->
-                  <el-tab-pane label="我的点赞" name="likes">
-                    <div v-loading="loading" v-if="myLikes.length">
-                      <div v-for="like in myLikes" :key="like.id" class="list-item-card">
-                        <div class="item-main">
-                          <h4 @click="viewPost(like.id)">{{ like.title }}</h4>
-                          <div class="item-meta"><span>点赞于：{{ like.createTime }}</span></div>
-                        </div>
-                        <el-button type="text" class="delete-text" @click="cancelLike(like.id)">取消点赞</el-button>
-                      </div>
-                    </div>
-                    <el-empty v-else description="暂无点赞的内容"></el-empty>
-                  </el-tab-pane>
-
-                  <!-- 2. 我的收藏 -->
-                  <el-tab-pane label="我的收藏" name="favorites">
-                    <div v-loading="loading" v-if="myFavorites.length">
-                      <div v-for="fav in myFavorites" :key="fav.id" class="list-item-card">
-                        <div class="item-main">
-                          <h4 @click="viewPost(fav.id)">{{ fav.title }}</h4>
-                          <div class="item-meta"><span>收藏于：{{ fav.createTime }}</span></div>
-                        </div>
-                        <el-button type="text" class="delete-text" @click="cancelFavorite(fav.id)">取消收藏</el-button>
-                      </div>
-                    </div>
-                    <el-empty v-else description="暂无收藏的内容"></el-empty>
-                  </el-tab-pane>
-
-                  <!-- 3. 我的关注 -->
-                  <el-tab-pane label="我的关注" name="follow">
-                    <el-empty description="暂无关注的人"></el-empty>
-                  </el-tab-pane>
-
-                  <!-- 4. 收到的赞 -->
-                  <el-tab-pane label="收到的赞" name="received_likes">
-                    <el-empty description="暂时还没有人给您点赞哦，快去发布精彩话题吧！"></el-empty>
-                  </el-tab-pane>
-
-                  <!-- 5. 收到的收藏 -->
-                  <el-tab-pane label="收到的收藏" name="received_favorites">
-                    <el-empty description="您的文章还没有被收藏过，继续加油哦！"></el-empty>
-                  </el-tab-pane>
-
-                  <!-- 6. 我的粉丝 -->
-                  <el-tab-pane label="我的粉丝" name="fans">
-                    <el-empty description="暂无粉丝"></el-empty>
-                  </el-tab-pane>
-                </el-tabs>
-              </div>
-            </el-tab-pane>
-
-            <!-- 意见反馈 (提交+记录) -->
-            <el-tab-pane name="feedback">
-              <span slot="label"><i class="el-icon-message"></i> 意见反馈</span>
-              <div class="tab-body">
-                <el-tabs type="border-card" v-model="feedbackSubTab">
-                  <el-tab-pane label="提交反馈" name="submit">
-                    <el-form :model="feedbackForm" label-width="80px" style="max-width: 600px; padding-top: 20px">
-                      <el-form-item label="反馈类型">
-                        <el-select v-model="feedbackForm.type">
-                          <el-option v-for="item in feedbackTypes" :key="item.value" :label="item.label" :value="item.value"></el-option>
-                        </el-select>
-                      </el-form-item>
-                      <el-form-item label="详细内容"><el-input type="textarea" :rows="5" v-model="feedbackForm.content"></el-input></el-form-item>
-                      <el-form-item><el-button type="primary" @click="submitFeedback">立即提交</el-button></el-form-item>
-                    </el-form>
-                  </el-tab-pane>
-                  <el-tab-pane label="我的反馈" name="history">
-                    <div v-loading="loading" v-if="myFeedbacks.length">
-                      <div v-for="f in myFeedbacks" :key="f.id" class="feedback-history-item">
-                        <div class="f-header">
-                          <el-tag size="mini">{{ getFeedbackTypeName(f.type) }}</el-tag>
-                          <span class="f-time">{{ f.createTime }}</span>
-                          <el-tag :type="f.status == 1 ? 'success' : 'info'" size="mini" class="f-status">{{ f.status == 1 ? '已处理' : '待处理' }}</el-tag>
-                        </div>
-                        <div class="f-body">{{ f.content }}</div>
-                        <div class="f-reply" v-if="f.replyContent">
-                          <div class="reply-title"><i class="el-icon-chat-dot-round"></i> 管理员回复：</div>
-                          <div class="reply-text">{{ f.replyContent }}</div>
-                        </div>
-                      </div>
-                      <el-pagination background @current-change="handleFeedbackPageChange" :current-page="params.pageNum" :page-size="params.pageSize" layout="prev, pager, next" :total="feedbackTotal"></el-pagination>
-                    </div>
-                  </el-tab-pane>
-                </el-tabs>
-              </div>
-            </el-tab-pane>
-
-            <!-- 账号绑定 (Image 4 风格) -->
-            <el-tab-pane name="binding">
-              <span slot="label"><i class="el-icon-link"></i> 账号绑定</span>
-              <div class="tab-body">
-                <div class="binding-tips">
-                  <el-alert title="安全提示" type="info" description="绑定社交账号后，您可以享受更便捷的登录体验。" show-icon :closable="false"></el-alert>
-                </div>
-                <div class="binding-list-full">
-                  <div v-for="acc in boundAccounts" :key="acc.type" class="binding-card-row">
-                    <div class="acc-icon-box"><i :class="acc.icon" :style="{color: acc.color}"></i></div>
-                    <div class="acc-info-text">
-                      <div class="name">{{ acc.name }}</div>
-                      <div class="status-desc">{{ acc.isBound ? (acc.username || '已关联') : '未关联第三方账号' }}</div>
-                    </div>
-                    <div class="acc-ops">
-                      <el-tag :type="acc.isBound ? 'success' : 'info'" size="small" effect="dark">{{ acc.isBound ? '已绑定' : '未绑定' }}</el-tag>
-                      <el-button :type="acc.isBound ? 'danger' : 'primary'" size="small"
-                                 :icon="acc.isBound ? 'el-icon-close' : 'el-icon-link'"
-                                 @click="acc.isBound ? unbindAccount(acc.type) : bindAccount(acc.type)">
-                        {{ acc.isBound ? '解除' : '去绑定' }}
-                      </el-button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </el-tab-pane>
-
-            <!-- 个人资料 (新增展示项) -->
-            <el-tab-pane name="profile_view">
-              <span slot="label"><i class="el-icon-user"></i> 个人资料</span>
-              <div class="tab-body" style="padding: 20px">
-                <el-descriptions :column="1" border>
-                  <el-descriptions-item label="用户昵称">{{ userInfo.nickname }}</el-descriptions-item>
-                  <el-descriptions-item label="联系邮箱">{{ userInfo.email }}</el-descriptions-item>
-                  <el-descriptions-item label="性别">
-                    <el-tag size="small">{{ userInfo.sex == 1 ? '男' : userInfo.sex == 2 ? '女' : '保密' }}</el-tag>
-                  </el-descriptions-item>
-                  <el-descriptions-item label="个人简介">{{ userInfo.signature || '这个人很懒，还没有写简介...' }}</el-descriptions-item>
-                </el-descriptions>
-              </div>
-            </el-tab-pane>
-
-            <!-- 个人设置 -->
-            <el-tab-pane name="settings">
-              <span slot="label"><i class="el-icon-lock"></i> 个人设置</span>
-              <div class="tab-body">
-                <h3 class="inner-title">密码修改</h3>
-                <el-form :model="passwordForm" :rules="passwordRules" ref="passwordForm" label-width="110px" style="max-width: 450px">
-                  <el-form-item label="旧密码" prop="oldPassword"><el-input type="password" v-model="passwordForm.oldPassword" show-password></el-input></el-form-item>
-                  <el-form-item label="新密码" prop="newPassword"><el-input type="password" v-model="passwordForm.newPassword" show-password></el-input></el-form-item>
-                  <el-form-item label="确认新密码" prop="confirmPassword"><el-input type="password" v-model="passwordForm.confirmPassword" show-password></el-input></el-form-item>
-                  <el-form-item><el-button type="primary" @click="submitPasswordChange">确认修改</el-button></el-form-item>
-                </el-form>
-              </div>
-            </el-tab-pane>
-
-          </el-tabs>
-        </el-card>
-      </el-col>
-
-      <!-- 右侧辅助栏 -->
-      <el-col :xs="24" :sm="24" :md="6">
-        <el-card shadow="never" class="side-card">
-          <div slot="header" class="side-title"><span><i class="el-icon-trophy"></i> 个人成就</span></div>
-          <div class="ach-list">
-            <div class="ach-item"><i class="el-icon-thumb" style="background:#ff7875"></i> <span>获赞 {{ statistics.likes || 0 }}</span></div>
-            <div class="ach-item"><i class="el-icon-view" style="background:#ff9c6e"></i> <span>阅读 {{ statistics.views || 0 }}</span></div>
-            <div class="ach-item"><i class="el-icon-coin" style="background:#ffc069"></i> <span>积分 {{ userInfo.points || 0 }}</span></div>
+        <section class="content-card glass-panel">
+          <div class="section-heading compact">
+            <div>
+              <span class="eyebrow">{{ primarySection.eyebrow }}</span>
+              <h2>{{ primarySection.title }}</h2>
+            </div>
+            <button class="ghost-btn" @click="refreshWorkbench">
+              <i class="fas fa-sync-alt" :class="{ rotating: loading }"></i>
+              刷新
+            </button>
           </div>
-        </el-card>
 
-        <el-card shadow="never" class="side-card">
-          <div class="follow-stats">
-            <div class="stat-unit"><div class="v">{{ statistics.following || 0 }}</div><div class="l">关注</div></div>
-            <div class="sep"></div>
-            <div class="stat-unit"><div class="v">{{ statistics.followers || 0 }}</div><div class="l">粉丝</div></div>
+          <div class="data-list" v-if="primaryItems.length">
+            <article v-for="item in primaryItems" :key="item.key" class="data-row">
+              <div>
+                <strong>{{ item.title }}</strong>
+                <p>{{ item.desc }}</p>
+              </div>
+              <span>{{ item.meta }}</span>
+            </article>
           </div>
-        </el-card>
+          <div v-else class="empty-tip">
+            <i class="fas fa-inbox"></i>
+            <strong>暂无相关数据</strong>
+            <span>可以先使用上方功能入口完成当前角色的核心流程。</span>
+          </div>
+        </section>
+      </main>
 
-        <el-card shadow="never" class="side-card sign-panel">
-          <el-button type="danger" :disabled="signInStatus" @click="handleSignIn" style="width:100%" round>
-            {{ signInStatus ? '今日已签到' : '立即签到' }}
-          </el-button>
-          <div class="sign-info">连续签到 <span>{{ signInStats.continuousDays }}</span> 天</div>
-        </el-card>
-      </el-col>
-    </el-row>
+      <aside class="side-panel">
+        <section class="todo-card glass-panel">
+          <div class="section-heading compact">
+            <div>
+              <span class="eyebrow">Todo</span>
+              <h2>待办提醒</h2>
+            </div>
+          </div>
+          <div class="todo-list" v-if="todos.length">
+            <button
+              v-for="todo in todos"
+              :key="`${todo.type}-${todo.relatedId}-${todo.title}`"
+              class="todo-row"
+              :class="todo.priority"
+              @click="goTodo(todo)"
+            >
+              <span>{{ todo.priority || 'normal' }}</span>
+              <strong>{{ todo.title }}</strong>
+              <small>{{ todo.content }}</small>
+            </button>
+          </div>
+          <div v-else class="empty-mini">当前没有紧急待办</div>
+        </section>
 
-    <!-- 弹窗：编辑资料 -->
-    <el-dialog title="编辑个人资料" :visible.sync="editDialogVisible" width="500px" append-to-body>
-      <el-form :model="profileForm" label-width="90px">
-        <el-form-item label="用户昵称"><el-input v-model="profileForm.nickname"></el-input></el-form-item>
-        <el-form-item label="联系邮箱"><el-input v-model="profileForm.email"></el-input></el-form-item>
-        <el-form-item label="性别">
-          <el-radio-group v-model="profileForm.sex">
-            <el-radio :label="1">男</el-radio><el-radio :label="2">女</el-radio><el-radio :label="0">保密</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="自我介绍"><el-input type="textarea" :rows="3" v-model="profileForm.signature"></el-input></el-form-item>
-      </el-form>
-      <div slot="footer"><el-button type="primary" @click="submitProfile" :loading="loading">保存修改</el-button></div>
-    </el-dialog>
-
-    <AvatarCropper :visible.sync="showCropper" :user="userInfo" @update-avatar="handleAvatarUpdate" />
+        <section class="resource-card glass-panel">
+          <span class="eyebrow">Resources</span>
+          <h2>备赛资源</h2>
+          <p>根据角色工作台同步展示资源入口，学生可下载资料，教师和管理员可用于指导与归档。</p>
+          <button @click="$router.push('/resource')">
+            进入资源中心
+            <i class="fas fa-arrow-right"></i>
+          </button>
+        </section>
+      </aside>
+    </section>
   </div>
 </template>
 
 <script>
-// --- 完整保留所有接口导入 ---
-import {
-  getUserInfoApi, updateProfileApi, updatePasswordApi,
-  getMyCommentApi, delMyCommentApi, getMyLikeApi, getMyReplyApi, getMyFeedbackApi, addFeedbackApi,
-  signInApi, getSignInStatusApi, getSignInStatsApi
-} from '@/api/user'
-// 导入新的统计接口 (待会后端实现)
-import request from '@/utils/request'
-export function getUserStatsApi() {
-  return request({ url: '/portal/user/statistics', method: 'get' })
+import { getCurrentCompetitionUser, getCurrentUserId, getResponseData } from '@/utils/competition'
+
+const ACTION_META = {
+  '赛事浏览与报名': { icon: 'fas fa-trophy', path: '/', desc: '查看报名中赛事与赛程详情' },
+  '团队组建与成员管理': { icon: 'fas fa-users', path: '/team', desc: '创建团队、查看成员和指导老师' },
+  '参赛项目进度维护': { icon: 'fas fa-project-diagram', path: '/project', desc: '维护项目进度、里程碑和版本' },
+  '作品提交与版本记录': { icon: 'fas fa-upload', path: '/submission', desc: '查看我的提交记录并追踪版本' },
+  '备赛资源下载': { icon: 'fas fa-book-open', path: '/resource', desc: '下载模板、课件和评分标准' },
+  '获奖信息查询': { icon: 'fas fa-medal', path: '/award', desc: '查看获奖公示与评审结果' },
+  '赛事信息发布': { icon: 'fas fa-calendar-plus', path: '/admin/competition', desc: '发布赛事并维护赛事资料' },
+  '参赛团队资质审核': { icon: 'fas fa-user-check', path: '/team', desc: '审核团队状态与参赛资格' },
+  '指导项目绑定': { icon: 'fas fa-link', path: '/project', desc: '跟进指导团队和项目绑定关系' },
+  '项目线上指导': { icon: 'fas fa-comments', path: '/ai-chat', desc: '辅助学生完善项目材料' },
+  '参赛作品评审': { icon: 'fas fa-clipboard-check', path: '/admin/review', desc: '查看提交作品并录入评分' },
+  '获奖信息录入': { icon: 'fas fa-award', path: '/admin/review', desc: '维护奖项与评审归档' },
+  '本院系赛事审核': { icon: 'fas fa-check-double', path: '/admin/competition', desc: '审核赛事发布与状态流转' },
+  '参赛全量数据查看': { icon: 'fas fa-chart-pie', path: '/admin/competition', desc: '查看赛事、团队、项目总览' },
+  '获奖成果统计归档': { icon: 'fas fa-medal', path: '/award', desc: '汇总获奖成果和评审结果' },
+  '数据报表导出': { icon: 'fas fa-file-export', path: '/admin/review', desc: '整理提交与评审数据' },
+  '本院系师生账号管理': { icon: 'fas fa-user-cog', path: '/admin/user', desc: '管理教师与学生账号' }
 }
 
-import { getMyArticleApi, likeArticleApi, delArticleApi } from '@/api/article'
-import { getDictDataApi } from '@/api/dict'
-import AvatarCropper from '@/components/common/AvatarCropper.vue'
-import { marked } from "marked";
-
 export default {
-  name: 'Profile',
-  components: { AvatarCropper },
+  name: 'ProfileWorkbench',
   data() {
-    const validateConfirmPassword = (rule, value, callback) => {
-      if (value !== this.passwordForm.newPassword) callback(new Error('两次输入的密码不一致'))
-      else callback()
-    }
     return {
-      userInfo: {},
-      currentTab: 'topics',
-      interactionSubTab: 'likes', // ★★★ 初始标签设为“我的点赞”
-      feedbackSubTab: 'submit',
-      editDialogVisible: false,
-      showCropper: false,
       loading: false,
-      total: 0,
-      feedbackTotal: 0,
-      params: { pageNum: 1, pageSize: 10, title: '' },
-      profileForm: { nickname: '', email: '', sex: 0, signature: '' },
-      passwordForm: { oldPassword: '', newPassword: '', confirmPassword: '' },
-      feedbackForm: { type: '', content: '' },
-      // 实时统计
-      statistics: { posts: 0, likes: 0, followers: 0, following: 0, views: 0 },
-      posts: [],
-      myComments: [],
-      myReplies: [],
-      myLikes: [],
-      myFavorites: [],
-      myFeedbacks: [],
-      signInStatus: false,
-      signInStats: { continuousDays: 0, totalDays: 0 },
-      feedbackTypes: [],
-      boundAccounts: [
-        { type: 'github', name: 'GitHub', icon: 'fab fa-github', isBound: true, username: 'y2411037', color: '#333' },
-        { type: 'gitee', name: '码云 (Gitee)', icon: 'fab fa-git-alt', isBound: true, username: 'github_user', color: '#C71D23' }
-      ],
-      passwordRules: {
-        oldPassword: [{ required: true, message: '必填', trigger: 'blur' }],
-        newPassword: [{ required: true, min: 6, message: '至少6位', trigger: 'blur' }],
-        confirmPassword: [{ validator: validateConfirmPassword, trigger: 'blur' }]
-      }
+      workbench: {},
+      currentUser: getCurrentCompetitionUser() || {}
     }
   },
-  watch: {
-    currentTab(val) { this.params.pageNum = 1; this.loadDataByTab(val) },
-    interactionSubTab(val) { this.loadInteractionData(val) },
-    feedbackSubTab(val) { if(val === 'history') this.getMyFeedbacks() }
+  computed: {
+    roleLabel() {
+      const role = this.workbench.role || this.currentUser.role || '学生'
+      const map = {
+        student: '学生',
+        teacher: '教师',
+        admin: '管理员',
+        super_admin: '管理员',
+        department_admin: '管理员'
+      }
+      return map[role] || role
+    },
+    avatarText() {
+      const name = this.workbench.realName || this.currentUser.realName || this.currentUser.nickname || this.currentUser.username || '竞'
+      return String(name).slice(-2)
+    },
+    heroDescription() {
+      if (this.roleLabel === '教师') {
+        return '聚焦赛事发布、团队资质审核、指导项目绑定、线上指导、作品评审和获奖录入。'
+      }
+      if (this.roleLabel === '管理员') {
+        return '聚焦赛事审核、全量数据查看、获奖成果归档、报表导出和师生账号管理。'
+      }
+      return '聚焦赛事浏览报名、团队管理、项目进度维护、作品提交、资源下载和获奖查询。'
+    },
+    statCards() {
+      const stats = this.workbench.stats || {}
+      const map = this.roleLabel === '教师'
+        ? [
+          ['publishedCompetitionCount', '发布赛事'],
+          ['guidedTeamCount', '指导团队'],
+          ['guidedProjectCount', '指导项目'],
+          ['reviewedProjectCount', '已评审项目']
+        ]
+        : this.roleLabel === '管理员'
+          ? [
+            ['competitionCount', '赛事总数'],
+            ['teamCount', '团队总数'],
+            ['projectCount', '项目总数'],
+            ['awardCount', '获奖成果'],
+            ['teacherCount', '教师账号'],
+            ['studentCount', '学生账号']
+          ]
+          : [
+            ['myTeamCount', '我的团队'],
+            ['myProjectCount', '我的项目'],
+            ['mySubmissionCount', '作品提交'],
+            ['myAwardCount', '获奖结果']
+          ]
+
+      return map.map(([key, label], index) => ({
+        label,
+        value: stats[key] ?? 0,
+        icon: this.getStatIcon(label),
+        hint: this.getStatHint(label),
+        tone: `tone-${(index % 6) + 1}`
+      }))
+    },
+    actionCards() {
+      const actions = this.workbench.allowedActions || []
+      return actions.map(label => ({
+        label,
+        ...(ACTION_META[label] || { icon: 'fas fa-circle-dot', path: '/', desc: '进入相关业务模块' })
+      }))
+    },
+    todos() {
+      return this.workbench.todos || []
+    },
+    primarySection() {
+      if (this.roleLabel === '管理员') return { eyebrow: 'Admin Data', title: '全量项目与提交概览' }
+      if (this.roleLabel === '教师') return { eyebrow: 'Guidance', title: '指导项目与待评审作品' }
+      return { eyebrow: 'My Progress', title: '我的项目与提交进度' }
+    },
+    primaryItems() {
+      const source = this.roleLabel === '管理员'
+        ? [...(this.workbench.projects || []), ...(this.workbench.submissions || [])]
+        : this.roleLabel === '教师'
+          ? (this.workbench.projects || [])
+          : [...(this.workbench.projects || []), ...(this.workbench.submissions || [])]
+
+      return source.slice(0, 8).map((item, index) => {
+        const isSubmission = item.submissionId
+        return {
+          key: `${isSubmission ? 'submission' : 'project'}-${item.submissionId || item.projectId || index}`,
+          title: isSubmission ? (item.projectName || '未命名提交') : (item.projectName || '未命名项目'),
+          desc: isSubmission
+            ? `${item.teamName || '未绑定团队'} · ${item.competitionTitle || '未绑定赛事'}`
+            : `${item.teamName || '未绑定团队'} · 进度 ${item.progress ?? 0}% · 提交 ${item.submissionCount ?? 0} 次`,
+          meta: isSubmission ? (item.version || '暂无版本') : (item.awardLevel || item.latestVersion || '进行中')
+        }
+      })
+    }
   },
-  created() { this.init() },
+  created() {
+    if (!this.currentUser || !getCurrentUserId(null)) {
+      this.$message.warning('请先登录后查看角色工作台')
+      this.$router.push('/login')
+      return
+    }
+    this.refreshWorkbench()
+  },
   methods: {
-    init() {
-      getUserInfoApi().then(res => {
-        this.userInfo = res.data.sysUser;
-        Object.assign(this.profileForm, res.data.sysUser);
-      });
-      // 核心：调用实时统计接口
-      getUserStatsApi().then(res => {
-        if (res.data) this.statistics = res.data;
-      });
-      this.getDicts(); this.getSignInStatus(); this.getSignInStats();
-      this.loadDataByTab(this.currentTab);
+    async refreshWorkbench() {
+      this.loading = true
+      try {
+        const res = await this.$http.get('/competition/workbench', {
+          params: { userId: getCurrentUserId() }
+        })
+        this.workbench = getResponseData(res, {})
+      } catch (err) {
+        this.workbench = this.buildFallbackWorkbench()
+        this.$message.warning('角色工作台接口暂不可用，已展示本地演示结构')
+      } finally {
+        this.loading = false
+      }
     },
-    loadDataByTab(tab) {
-      if (tab === 'topics') this.getMyArticle()
-      if (tab === 'interaction') this.loadInteractionData(this.interactionSubTab)
+    buildFallbackWorkbench() {
+      const role = this.currentUser.role || '学生'
+      const label = role === 'teacher' ? '教师' : role === 'admin' ? '管理员' : role
+      return {
+        role: label,
+        title: `${label || '学生'}工作台`,
+        realName: this.currentUser.realName || this.currentUser.nickname || this.currentUser.username,
+        username: this.currentUser.username,
+        stats: {},
+        allowedActions: label === '教师'
+          ? ['赛事信息发布', '参赛团队资质审核', '指导项目绑定', '项目线上指导', '参赛作品评审', '获奖信息录入']
+          : label === '管理员'
+            ? ['本院系赛事审核', '参赛全量数据查看', '获奖成果统计归档', '数据报表导出', '本院系师生账号管理']
+            : ['赛事浏览与报名', '团队组建与成员管理', '参赛项目进度维护', '作品提交与版本记录', '备赛资源下载', '获奖信息查询'],
+        todos: []
+      }
     },
-    loadInteractionData(tab) {
-      if (tab === 'likes') this.getMyLikes()
-      if (tab === 'favorites') this.getMyFavorites()
-      if (tab === 'follow') { /* 加载我的关注逻辑 */ }
-      if (tab === 'fans') { /* 加载我的粉丝逻辑 */ }
+    getStatIcon(label) {
+      if (label.includes('赛事')) return 'fas fa-trophy'
+      if (label.includes('团队')) return 'fas fa-users'
+      if (label.includes('项目')) return 'fas fa-project-diagram'
+      if (label.includes('提交')) return 'fas fa-upload'
+      if (label.includes('获奖')) return 'fas fa-medal'
+      if (label.includes('教师')) return 'fas fa-chalkboard-teacher'
+      if (label.includes('学生')) return 'fas fa-user-graduate'
+      return 'fas fa-chart-bar'
     },
-    getMyArticle() {
-      this.loading = true;
-      getMyArticleApi(this.params).then(res => {
-        this.posts = res.data.records; this.total = res.data.total
-      }).finally(() => this.loading = false);
+    getStatHint(label) {
+      if (label.includes('赛事')) return '赛事流程'
+      if (label.includes('团队')) return '团队协同'
+      if (label.includes('项目')) return '项目进度'
+      if (label.includes('提交')) return '版本记录'
+      if (label.includes('获奖')) return '成果归档'
+      if (label.includes('账号')) return '账号管理'
+      return '实时概览'
     },
-    getMyComment() { getMyCommentApi(this.params).then(res => this.myComments = res.data.records) },
-    getMyReplies() { getMyReplyApi(this.params).then(res => this.myReplies = res.data.records) },
-    getMyLikes() { getMyLikeApi(this.params).then(res => this.myLikes = res.data.records) },
-    getMyFavorites() { this.myFavorites = []; },
-    cancelFavorite(id) { this.$message.success('已从收藏夹移除'); this.getMyFavorites(); },
-    getMyFeedbacks() {
-      this.loading = true;
-      getMyFeedbackApi(this.params).then(res => {
-        this.myFeedbacks = res.data.records; this.feedbackTotal = res.data.total
-      }).finally(() => this.loading = false);
+    goAction(action) {
+      this.$router.push(action.path)
     },
-    getFeedbackTypeName(val) { const t = this.feedbackTypes.find(i => i.value == val); return t ? t.label : '其他' },
-    handleSearch() { this.params.pageNum = 1; this.getMyArticle(); },
-    handlePostChange(p) { this.params.pageNum = p; this.getMyArticle(); },
-    handleFeedbackPageChange(p) { this.params.pageNum = p; this.getMyFeedbacks(); },
-    viewPost(id) { this.$router.push(`/post/${id}`) },
-    editPost(id) { this.$router.push(`/editor?id=${id}`) },
-    deletePost(row) {
-      this.$confirm(`确定删除话题 '${row.title}'?`).then(() => {
-        delArticleApi(row.id).then(() => { this.$message.success('已删除'); this.getMyArticle(); })
-      })
-    },
-    deleteComment(id) { delMyCommentApi(id).then(() => { this.$message.success('评论已删除'); this.getMyComment(); }) },
-    cancelLike(id) { likeArticleApi(id).then(() => { this.$message.success('已取消点赞'); this.getMyLikes(); }) },
-    bindAccount(type) { this.$confirm('确定跳转绑定吗？').then(() => this.$message.info('正在跳转...')) },
-    unbindAccount(type) { this.$confirm('确定解除绑定吗？').then(() => this.$message.success('已解除')) },
-    openEditDialog() { Object.assign(this.profileForm, this.userInfo); this.editDialogVisible = true; },
-    submitProfile() {
-      this.loading = true;
-      updateProfileApi(this.profileForm).then(() => {
-        this.$message.success('修改已保存'); this.editDialogVisible = false; this.init();
-      }).finally(() => this.loading = false);
-    },
-    submitPasswordChange() {
-      this.$refs.passwordForm.validate(v => { if(v) updatePasswordApi(this.passwordForm).then(() => this.$message.success('修改成功')) })
-    },
-    submitFeedback() {
-      addFeedbackApi(this.feedbackForm).then(() => {
-        this.$message.success('感谢反馈'); this.feedbackForm.content = ''; this.feedbackSubTab = 'history'
-      })
-    },
-    handleSignIn() { signInApi().then(() => { this.$message.success('签到成功'); this.getSignInStatus(); this.getSignInStats(); }) },
-    getSignInStatus() { getSignInStatusApi().then(res => this.signInStatus = res.data) },
-    getSignInStats() { getSignInStatsApi().then(res => this.signInStats = res.data) },
-    getDicts() { getDictDataApi(['feedback_type']).then(res => this.feedbackTypes = res.data) },
-    parseContent(c) { return marked(c || "") },
-    handleAvatarUpdate(url) { this.userInfo.avatar = url }
+    goTodo(todo) {
+      const routeMap = {
+        TEAM: '/team',
+        TEAM_AUDIT: '/team',
+        SUBMISSION: todo.relatedId ? `/project/submit/${todo.relatedId}` : '/submission',
+        PROGRESS: '/project',
+        REVIEW: '/admin/review',
+        COMPETITION_AUDIT: '/admin/competition'
+      }
+      this.$router.push(routeMap[todo.type] || '/')
+    }
   }
 }
 </script>
 
-<style scoped lang="scss">
-/* 零改动，完全保留你现在的样式定义 */
-.profile-wrapper { max-width: 1200px; margin: 20px auto; padding: 0 15px; background: #f4f5f5; min-height: 100vh; }
-.profile-header-card { margin-bottom: 20px; .header-main { border: none; text-align: center; padding: 40px 0;
-  .avatar-box { margin-bottom: 15px; .el-avatar { border: 4px solid #fff; box-shadow: 0 2px 12px rgba(0,0,0,0.1); cursor: pointer; } }
-  .nickname { font-size: 26px; color: #333; margin: 10px 0; font-weight: 600; }
-  .signature-text { color: #666; font-size: 15px; margin-bottom: 25px; }
-  .edit-btn-top { color: #f06292; border: 2px solid #f06292; font-size: 18px; padding: 10px 30px; font-weight: 500; transition: all 0.3s; &:hover { background: #f06292; color: #fff; } }
-}}
-.binding-list-full { display: flex; flex-direction: column; gap: 16px;
-  .binding-card-row { background: #fff; border: 1px solid #ebeef5; border-radius: 8px; padding: 24px 35px; display: flex; align-items: center;
-    .acc-icon-box { width: 54px; height: 54px; background: #f0f9ff; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 25px; i { font-size: 26px; } }
-    .acc-info-text { flex: 1; .name { font-size: 17px; font-weight: bold; } .status-desc { font-size: 13px; color: #999; } }
-    .acc-ops { display: flex; align-items: center; gap: 18px; }
+<style scoped>
+.workbench-page {
+  position: relative;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 28px 28px 48px;
+  color: #18212f;
+  font-family: var(--font-body);
+  overflow: hidden;
+}
+.workbench-page::before,
+.workbench-page::after {
+  content: "";
+  position: fixed;
+  z-index: 0;
+  pointer-events: none;
+  filter: blur(8px);
+}
+.workbench-page::before {
+  inset: 76px 0 auto 0;
+  height: 360px;
+  background:
+    radial-gradient(circle at 16% 30%, rgba(199, 232, 225, 0.74), transparent 28%),
+    radial-gradient(circle at 72% 22%, rgba(214, 205, 232, 0.58), transparent 30%),
+    linear-gradient(135deg, rgba(243, 249, 248, 0.96), rgba(244, 247, 252, 0.76));
+}
+.workbench-page::after {
+  right: -90px;
+  bottom: 80px;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  background: rgba(191, 209, 234, 0.38);
+}
+.workbench-page > * {
+  position: relative;
+  z-index: 1;
+}
+.glass-panel {
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.74);
+  box-shadow: 0 18px 46px rgba(79, 99, 124, 0.12);
+  backdrop-filter: blur(18px);
+}
+.workbench-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 160px;
+  padding: 22px 28px;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 88% 18%, rgba(214, 205, 232, 0.62), transparent 34%),
+    radial-gradient(circle at 8% 92%, rgba(243, 226, 167, 0.38), transparent 32%),
+    rgba(255, 255, 255, 0.72);
+}
+.hero-copy {
+  min-width: 0;
+}
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  padding: 6px 11px;
+  border: 1px solid rgba(111, 143, 168, 0.18);
+  border-radius: 9999px;
+  background: rgba(235, 247, 242, 0.82);
+  color: #526173;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.workbench-hero h1,
+.section-heading h2,
+.stat-card strong,
+.resource-card h2 {
+  color: #141b2a;
+  font-family: var(--font-body);
+  letter-spacing: 0;
+}
+.workbench-hero h1 {
+  margin: 14px 0 8px;
+  font-size: 34px;
+  line-height: 1.12;
+  font-weight: 900;
+}
+.workbench-hero p {
+  max-width: 760px;
+  margin: 0;
+  font-size: 15px;
+}
+.workbench-hero p,
+.resource-card p,
+.data-row p,
+.action-card small,
+.identity-card span {
+  color: #647082;
+  line-height: 1.55;
+}
+.hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+.hero-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.64);
+  color: #59677a;
+  font-size: 12px;
+  font-weight: 700;
+}
+.identity-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 236px;
+  padding: 12px 14px;
+  border: 1px solid rgba(111, 143, 168, 0.18);
+  border-radius: 24px;
+  background: rgba(237, 234, 248, 0.78);
+  box-shadow: 0 14px 28px rgba(110, 102, 142, 0.12);
+}
+.avatar-mark {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  color: #233044;
+  font-weight: 900;
+}
+.identity-card strong,
+.identity-card span {
+  display: block;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin: 16px 0;
+}
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 92px;
+  padding: 16px;
+  border-radius: 20px;
+}
+.stat-card.tone-1 { background: rgba(214, 205, 232, 0.62); }
+.stat-card.tone-2 { background: rgba(201, 230, 216, 0.62); }
+.stat-card.tone-3 { background: rgba(191, 209, 234, 0.62); }
+.stat-card.tone-4 { background: rgba(243, 226, 167, 0.58); }
+.stat-card.tone-5 { background: rgba(232, 199, 174, 0.5); }
+.stat-card.tone-6 { background: rgba(221, 232, 165, 0.54); }
+.stat-icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.62);
+  color: #4f6f8a;
+  font-size: 17px;
+}
+.stat-card span,
+.stat-card small {
+  display: block;
+}
+.stat-card span {
+  color: #667085;
+  font-size: 13px;
+  font-weight: 700;
+}
+.stat-card strong {
+  display: block;
+  margin: 2px 0;
+  color: #111827;
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 900;
+}
+.stat-card small {
+  color: #788395;
+  font-size: 12px;
+}
+.workbench-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 336px;
+  gap: 16px;
+}
+.main-panel,
+.todo-card,
+.resource-card,
+.content-card {
+  padding: 18px;
+  border-radius: 24px;
+}
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.section-heading h2 {
+  margin: 8px 0 0;
+  font-size: 22px;
+  font-weight: 900;
+}
+.section-heading.compact h2 {
+  font-size: 20px;
+}
+.action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.action-card,
+.ghost-btn,
+.todo-row,
+.resource-card button {
+  border: 1px solid rgba(111, 143, 168, 0.16);
+  background: rgba(255, 255, 255, 0.62);
+  color: #1f2937;
+  cursor: pointer;
+  font-weight: 800;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+.action-card {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 10px;
+  min-height: 74px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  text-align: left;
+}
+.action-card > i:first-child {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.74);
+  color: #4f6f8a;
+}
+.action-card strong,
+.action-card small {
+  display: block;
+}
+.action-card strong {
+  font-size: 14px;
+}
+.action-card small {
+  margin-top: 2px;
+  font-size: 12px;
+}
+.action-card:nth-child(1) { background: rgba(232, 199, 174, 0.42); }
+.action-card:nth-child(2) { background: rgba(191, 209, 234, 0.48); }
+.action-card:nth-child(3) { background: rgba(201, 230, 216, 0.48); }
+.action-card:nth-child(4) { background: rgba(214, 205, 232, 0.48); }
+.action-card:nth-child(5) { background: rgba(243, 226, 167, 0.44); }
+.action-card:nth-child(6) { background: rgba(221, 232, 165, 0.42); }
+.action-card:hover,
+.ghost-btn:hover,
+.todo-row:hover,
+.resource-card button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(79, 99, 124, 0.14);
+  background: rgba(255, 255, 255, 0.86);
+}
+.content-card {
+  background: rgba(255, 255, 255, 0.58);
+}
+.data-list {
+  display: grid;
+  gap: 9px;
+}
+.data-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid rgba(111, 143, 168, 0.13);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.62);
+}
+.data-row strong,
+.data-row span {
+  color: #1f2937;
+  font-weight: 900;
+}
+.data-row strong {
+  font-size: 14px;
+}
+.data-row p {
+  margin: 4px 0 0;
+  font-size: 12px;
+}
+.data-row span {
+  flex: 0 0 auto;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(235, 247, 242, 0.82);
+  color: #4f6f8a;
+  font-size: 12px;
+}
+.ghost-btn,
+.resource-card button {
+  min-height: 34px;
+  padding: 0 13px;
+  border-radius: 12px;
+  background: rgba(243, 226, 167, 0.48);
+  color: #344054;
+}
+.side-panel {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+}
+.todo-list {
+  display: grid;
+  gap: 9px;
+}
+.todo-row {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 16px;
+  text-align: left;
+}
+.todo-row.high {
+  background: rgba(232, 199, 174, 0.48);
+}
+.todo-row.medium {
+  background: rgba(243, 226, 167, 0.5);
+}
+.todo-row span {
+  width: max-content;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.76);
+  color: #344054;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+.todo-row strong {
+  font-size: 14px;
+}
+.todo-row small {
+  font-size: 12px;
+}
+.todo-row small,
+.empty-mini,
+.empty-tip span {
+  color: #667085;
+}
+.resource-card {
+  background:
+    linear-gradient(135deg, rgba(201, 230, 216, 0.58), rgba(191, 209, 234, 0.42)),
+    rgba(255, 255, 255, 0.62);
+}
+.resource-card h2 {
+  margin: 10px 0 8px;
+  font-size: 20px;
+  font-weight: 900;
+}
+.resource-card p {
+  margin: 0 0 14px;
+  font-size: 13px;
+}
+.resource-card button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.72);
+}
+.empty-tip,
+.empty-mini {
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  min-height: 130px;
+  text-align: center;
+}
+.empty-tip i {
+  color: #6f8fa8;
+  font-size: 24px;
+}
+.rotating {
+  animation: rotate 0.8s linear infinite;
+}
+@keyframes rotate {
+  to { transform: rotate(360deg); }
+}
+@media (max-width: 1080px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .workbench-layout {
+    grid-template-columns: 1fr;
   }
 }
-.list-item-card { display: flex; justify-content: space-between; align-items: center; padding: 18px 0; border-bottom: 1px solid #f0f0f0; .item-main { h4 { margin: 0 0 10px; cursor: pointer; &:hover { color: #f06292; } } p { color: #777; font-size: 13px; } .item-meta { font-size: 12px; color: #999; display: flex; gap: 18px; } } .delete-text { color: #ff7875; } }
-.stat-box { text-align: center; padding: 25px; background: #fafafa; border-radius: 8px; margin-bottom: 20px; .label { font-size: 13px; color: #999; margin-bottom: 10px; } .value { font-size: 22px; font-weight: bold; } }
-.feedback-history-item { padding: 18px; border-bottom: 1px solid #f0f0f0; .f-header { display: flex; justify-content: space-between; margin-bottom: 10px; } .f-reply { margin-top: 12px; padding: 12px; background: #f9f9f9; border-radius: 6px; } }
-.side-card { margin-bottom: 20px; border: none; .side-title { font-weight: bold; font-size: 14px; } }
-.ach-list { .ach-item { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; i { width: 30px; height: 30px; border-radius: 50%; color: #fff; text-align: center; line-height: 30px; } } }
-.follow-stats { display: flex; justify-content: space-around; text-align: center; .sep { width: 1px; background: #eee; } .v { font-size: 18px; font-weight: bold; } .l { font-size: 12px; color: #999; } }
-.sign-panel { text-align: center; .sign-info { margin-top: 10px; font-size: 12px; color: #666; span { color: #f06292; font-weight: bold; } } }
-.interaction-card { padding: 15px; border-bottom: 1px dashed #eee; .i-footer { display: flex; justify-content: space-between; margin-top: 10px; font-size: 12px; color: #999; } }
-.pagination-center { margin-top: 25px; text-align: center; }
+@media (max-width: 760px) {
+  .workbench-page {
+    padding: 18px 14px 36px;
+  }
+  .workbench-hero {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 22px 18px;
+  }
+  .workbench-hero h1 {
+    font-size: 28px;
+  }
+  .identity-card {
+    min-width: 0;
+    width: 100%;
+    border-radius: 20px;
+  }
+  .stats-grid,
+  .action-grid {
+    grid-template-columns: 1fr;
+  }
+  .section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .data-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
 </style>

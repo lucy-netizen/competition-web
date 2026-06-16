@@ -1,228 +1,270 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import Home from '@/views/home/index.vue'
 import Layout from '@/layout/index.vue'
 import NotFound from '@/views/404/404.vue'
-import Article from '@/views/article/index.vue'
-import Archive from '@/views/archives/index.vue'
-import Categories from '@/views/categories/index.vue'
-import Tags from '@/views/tags/index.vue'
-import Messages from '@/views/messages/index.vue'
-import About from '@/views/about/index.vue'
-import Photos from '@/views/photos/index.vue'
 import store from '@/store';
-import Aboutus from '@/views/aboutus/index.vue'
 
 Vue.use(VueRouter)
 
 const routes = [
-
-    {
-        path: "/",
-        component: Layout,
+  {
+    path: "/",
+    component: Layout,
+    meta: {
+      title: "大学生竞赛管理系统",
+      loading: true
+    },
+    children: [
+      // 首页/赛事大厅
+      {
+        path: '/',
+        name: 'Home',
+        component: () => import('@/views/home/index.vue'),
         meta: {
-            title: "拾壹博客-一个专注于技术分享的博客平台",
-            loading: true
-        },
-        children: [
-            {
-                path: '/',
-                name: 'Home',
-                component: Home,
-                meta: {
-                    title: '首页',
-                    transition: 'fade',
-                    icon: 'fas fa-home',
-                    loading: true
-                 }
-              },
-              {
-                path: '/archive',
-                name: 'Archive',
-                component: Archive,
-                meta: { 
-                  transition: 'fade',
-                  title: '归档 - 拾壹博客',
-                  icon: 'fas fa-archive'
-                }
-              },
-              {
-                path: '/categories',
-                name: 'Categories',
-                component: Categories,
-                meta: {
-                    transition: 'fade',
-                    title: "分类 - 拾壹博客",
-                    icon: 'fas fa-folder'
-                 }
-              },
-              {
-                path: '/tags',
-                name: 'Tags',
-                component: Tags,
-                meta: {
-                    transition: 'fade',
-                    title: '标签 - 拾壹博客',
-                    icon: 'fas fa-tags'
-                }
-              },
-              {
-                path: '/moments',
-                name: 'Moments',
-                component: () => import('@/views/moments/index.vue'),
-                meta: {
-                  title: '说说 - 拾壹博客',
-                  icon: 'fas fa-comment-dots'
-                }
-              },
-              {
-                path: '/aboutus',
-                name: 'Aboutus',
-                component: Aboutus,
-                meta: {
-                  transition: 'fade',
-                  title: '关于我们 - 拾壹博客',
-                  icon: 'fas fa-users'
-                }
-              },
-          {
-            path: '/utility',
-            name: 'utility',
-            component: () => import('@/views/utility/index.vue'),
-            meta: {
-              transition: 'fade',
-              title: '数据挖掘工具 - 拾壹博客',
-              icon: 'fas fa-fire'
-            }
-          },
-          // 新增：工具详情页路由
-          {
-            path: '/utility/detail',
-            name: 'ToolDetail',
-            component: () => import('@/views/utility/detail/index.vue'),
-            meta: {
-              transition: 'fade',
-              title: '工具详情 - 拾壹博客'
-            }
-          },
-              {
-                path: '/infrastructure',
-                name: 'Infrastructure',
-                component: () => import('@/views/infrastructure/index.vue'),
-                meta: {
-                  title: '基础设施 - 拾壹博客',
-                  icon: 'fas fa-cloud-download-alt'
-
-                }
-              },
-            {
-                path: '/scientific-data',
-                name: 'ScientificData',
-                component: () => import('@/views/scientific-data/index.vue'),
-                meta: {
-                    title: '科学数据 ',
-                    icon: 'fas fa-database'
-                }
-            },
-              {
-                path: '/messages',
-                name: 'Messages',
-                component: Messages,
-                meta: { 
-                  transition: 'fade',
-                  title: '留言板 - 拾壹博客',
-                  icon: 'fas fa-comments'
-                }
-              },
-              {
-                path: '/friends',
-                name: 'Friends',
-                component: () => import(/* webpackPrefetch: true */ '@/views/friends/index.vue'),
-                meta: { 
-                  transition: 'fade',
-                  title: '友情链接 - 拾壹博客',
-                  icon: 'fas fa-user-friends'
-                }
-              },
-              {
-                path: '/about',
-                name: 'About',
-                component: About,
-                meta: { 
-                  transition: 'fade',
-                  title: '关于本站 - 拾壹博客',
-                  icon: 'fas fa-info-circle'
-                }
-              },
-              {
-                path: '/post/:id',
-                name: 'Post',
-                component: Article,
-                props: true,
-                meta: {
-                  hidden: true
-                }
-              },
-              {
-                path: '/user/profile',
-                name: 'Profile',
-                component: () => import(/* webpackPrefetch: true */ '@/views/profile/index.vue'),
-                meta: {
-                  title: '个人主页 - 拾壹博客',
-                  icon: 'fas fa-user',
-                  hidden: true
-                }
-              },
-              {
-                path: '/editor',
-                name: 'Editor',
-                component: () => import(/* webpackPrefetch: true */ '@/views/editor/index.vue'),
-                meta: {
-                  title: '写文章 - 拾壹博客',
-                  icon: 'fas fa-edit',
-                  requireAuth: true,
-                  hidden: true
-                }
-              },
-              {
-                path: '/chat',
-                name: 'Chat',
-                component: () => import(/* webpackPrefetch: true */ '@/views/chat/index.vue'),
-                meta: {
-                  title: '聊天 - 拾壹博客',
-                  icon: 'fas fa-comments',
-                  hidden: true
-                }
-              }, {
-                path: '/login',
-                name: 'Login',
-                component: () => import('@/views/login/index.vue'),
-                meta: {
-                  title: '登录',
-                  hidden: true,
-                  fullscreen: true
-                }
-              },
-              {
-                path: '/notifications',
-                name: 'Notifications',
-                component: () => import('@/views/notifications/index.vue'),
-                meta: {
-                  title: '消息通知',
-                  requiresAuth: true,
-                  hidden: true
-                }
-              },
-              {
-                path: '/:pathMatch(.*)*',
-                name: 'NotFound',
-                component: NotFound,
-                meta: {
-                  hidden: true
-                }
-              }
-        ]
-    }
+          title: '赛事大厅 - 竞赛管理系统',
+          transition: 'fade',
+          icon: 'fas fa-home',
+          loading: true
+        }
+      },
+      // 赛事详情页
+      {
+        path: '/competition/detail/:id',
+        name: 'CompetitionDetail',
+        component: () => import('@/views/competition/detail/index.vue'),
+        props: true,
+        meta: {
+          transition: 'fade',
+          title: '赛事详情 - 竞赛管理系统',
+          hidden: true
+        }
+      },
+      // 我的团队
+      {
+        path: '/team',
+        name: 'Team',
+        component: () => import('@/views/team/index.vue'),
+        meta: {
+          transition: 'fade',
+          title: "我的团队 - 竞赛管理系统",
+          icon: 'fas fa-users',
+          requireAuth: true
+        }
+      },
+      // 团队详情页
+      {
+        path: '/team/detail/:id',
+        name: 'TeamDetail',
+        component: () => import('@/views/team/detail/index.vue'),
+        props: true,
+        meta: {
+          transition: 'fade',
+          title: '团队详情 - 竞赛管理系统',
+          requireAuth: true,
+          hidden: true
+        }
+      },
+      // 我的参赛项目
+      {
+        path: '/project',
+        name: 'Project',
+        component: () => import('@/views/project/index.vue'),
+        meta: {
+          transition: 'fade',
+          title: '我的项目 - 竞赛管理系统',
+          icon: 'fas fa-project-diagram',
+          requireAuth: true
+        }
+      },
+      // 作品提交页面
+      {
+        path: '/project/submit/:projectId',
+        name: 'ProjectSubmit',
+        component: () => import('@/views/project/submit/index.vue'),
+        props: true,
+        meta: {
+          transition: 'fade',
+          title: '作品提交 - 竞赛管理系统',
+          requireAuth: true,
+          hidden: true
+        }
+      },
+      // 备赛资源中心
+      {
+        path: '/resource',
+        name: 'Resource',
+        component: () => import('@/views/resource/index.vue'),
+        meta: {
+          transition: 'fade',
+          title: '备赛资源 - 竞赛管理系统',
+          icon: 'fas fa-book-open'
+        }
+      },
+      // 智能备赛
+      {
+        path: '/ai-chat',
+        name: 'AiChat',
+        component: () => import('@/views/ai-chat/index.vue'),
+        meta: {
+          transition: 'fade',
+          title: '智能备赛 - 竞赛管理系统',
+          icon: 'fas fa-robot'
+        }
+      },
+      // 获奖公示
+      {
+        path: '/award',
+        name: 'Award',
+        component: () => import('@/views/award/index.vue'),
+        meta: {
+          transition: 'fade',
+          title: '获奖公示 - 竞赛管理系统',
+          icon: 'fas fa-trophy'
+        }
+      },
+      // 关于系统
+      {
+        path: '/about',
+        name: 'About',
+        component: () => import('@/views/about/index.vue'),
+        meta: {
+          transition: 'fade',
+          title: '关于系统 - 竞赛管理系统',
+          icon: 'fas fa-info-circle'
+        }
+      },
+      // 系统通知
+      {
+        path: '/notification',
+        name: 'Notification',
+        component: () => import('@/views/notification/index.vue'),
+        meta: {
+          transition: 'fade',
+          title: '系统通知 - 竞赛管理系统',
+          icon: 'fas fa-bell',
+          requireAuth: true
+        }
+      },
+      // 我的提交记录
+      {
+        path: '/submission',
+        name: 'Submission',
+        component: () => import('@/views/submission/index.vue'),
+        meta: {
+          transition: 'fade',
+          title: '我的提交记录 - 竞赛管理系统',
+          icon: 'fas fa-upload',
+          requireAuth: true
+        }
+      },
+      // 【管理员】数据分析
+      {
+        path: '/analytics',
+        name: 'Analytics',
+        component: () => import('@/views/analytics/index.vue'),
+        meta: {
+          transition: 'fade',
+          title: '数据分析 - 竞赛管理系统',
+          icon: 'fas fa-chart-line',
+          requireAuth: true,
+          requireAdmin: true
+        }
+      },
+      // 【教师/管理员】赛事发布与管理
+      {
+        path: '/admin/competition',
+        name: 'AdminCompetition',
+        component: () => import('@/views/admin/competition/index.vue'),
+        meta: {
+          transition: 'fade',
+          title: '赛事管理 - 竞赛管理系统',
+          icon: 'fas fa-calendar-check',
+          requireAuth: true,
+          requireTeacherOrAdmin: true
+        }
+      },
+      // 【教师/管理员】作品评审
+      {
+        path: '/admin/review',
+        name: 'AdminReview',
+        component: () => import('@/views/admin/review/index.vue'),
+        meta: {
+          transition: 'fade',
+          title: '作品评审 - 竞赛管理系统',
+          icon: 'fas fa-list-check',
+          requireAuth: true,
+          requireTeacherOrAdmin: true
+        }
+      },
+      // 【管理员】用户管理
+      {
+        path: '/admin/user',
+        name: 'AdminUser',
+        component: () => import('@/views/admin/user/index.vue'),
+        meta: {
+          transition: 'fade',
+          title: '用户管理 - 竞赛管理系统',
+          icon: 'fas fa-user-cog',
+          requireAuth: true,
+          requireAdmin: true
+        }
+      },
+      // 个人中心
+      {
+        path: '/user/profile',
+        name: 'Profile',
+        component: () => import('@/views/profile/index.vue'),
+        meta: {
+          title: '个人中心 - 竞赛管理系统',
+          icon: 'fas fa-user',
+          requireAuth: true,
+          hidden: true
+        }
+      },
+      // 登录页
+      {
+        path: '/login',
+        name: 'login',
+        component: () => import('@/views/login/index.vue'),
+        meta: {
+          title: '用户登录',
+          hidden: true,
+          fullscreen: true
+        }
+      },
+      // 注册页
+      {
+        path: '/register',
+        name: 'Register',
+        component: () => import('@/views/register/index.vue'),
+        meta: {
+          title: '用户注册',
+          hidden: true,
+          fullscreen: true
+        }
+      },
+      // 消息通知详情
+      {
+        path: '/notifications',
+        name: 'Notifications',
+        component: () => import('@/views/notifications/index.vue'),
+        meta: {
+          title: '消息通知',
+          requireAuth: true,
+          hidden: true
+        }
+      },
+      // 404页面
+      {
+        path: '/:pathMatch(.*)*',
+        name: 'NotFound',
+        component: NotFound,
+        meta: {
+          hidden: true
+        }
+      }
+    ]
+  }
 ]
 
 const router = new VueRouter({
@@ -234,21 +276,57 @@ const router = new VueRouter({
   }
 })
 
-
 // 解决重复点击导航时，控制台出现报错
 const VueRouterPush = VueRouter.prototype.push
 VueRouter.prototype.push = function push (to) {
   return VueRouterPush.call(this, to).catch(err => err)
 }
 
-
+// 全局导航守卫
 router.beforeEach((to, from, next) => {
+  // 设置页面标题
   if (to.meta.title) {
     document.title = to.meta.title
   }
-  //关闭搜索框
+  // 关闭搜索框（兼容原项目逻辑）
   store.commit('SET_SEARCH_VISIBLE', false)
+  const hasLocalUser = !!(sessionStorage.getItem('user') || localStorage.getItem('userInfo') || store.state.userInfo)
+  if (to.meta.requireAuth && !hasLocalUser) {
+    next({
+      path: '/login',
+      query: { redirect: to.fullPath }
+    })
+    return
+  }
+  const currentUser = getLocalUser()
+  const role = currentUser && currentUser.role
+  if (to.meta.requireTeacherOrAdmin) {
+    const allowedRoles = ['教师', 'teacher', '管理员', 'admin', 'super_admin', 'department_admin']
+    if (!allowedRoles.includes(role)) {
+      next('/user/profile')
+      return
+    }
+  }
+  if (to.meta.requireAdmin) {
+    const adminRoles = ['管理员', 'admin', 'super_admin', 'department_admin']
+    if (!adminRoles.includes(role)) {
+      next('/user/profile')
+      return
+    }
+  }
   next()
 })
 
-export default router 
+function getLocalUser() {
+  const rawUser = sessionStorage.getItem('user') || localStorage.getItem('userInfo')
+  if (rawUser) {
+    try {
+      return JSON.parse(rawUser)
+    } catch (err) {
+      return null
+    }
+  }
+  return store.state.userInfo
+}
+
+export default router

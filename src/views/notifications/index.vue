@@ -357,7 +357,7 @@ export default {
       margin-right: 12px;
       
       &.fa-bell { color: #1677ff; }
-      &.fa-cog { color: #52c41a; }
+      &.fa-cog { color: #4f8d72; }
       &.fa-comment { color: #722ed1; }
       &.fa-heart { color: #eb2f96; }
       &.fa-user-plus { color: #13c2c2; }
@@ -461,7 +461,7 @@ export default {
       font-size: 1.1em;
       
       &.fa-bell { color: #1677ff; background: rgba(22, 119, 255, 0.1); }
-      &.fa-cog { color: #52c41a; background: rgba(82, 196, 26, 0.1); }
+      &.fa-cog { color: #4f8d72; background: rgba(79, 141, 114, 0.12); }
       &.fa-comment { color: #722ed1; background: rgba(114, 46, 209, 0.1); }
       &.fa-heart { color: #eb2f96; background: rgba(235, 47, 150, 0.1); }
       &.fa-user-plus { color: #13c2c2; background: rgba(19, 194, 194, 0.1); }
@@ -513,7 +513,7 @@ export default {
       }
       
       &:hover i {
-        color: #ff4d4f;
+        color: #b77a71;
       }
     }
   }

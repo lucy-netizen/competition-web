@@ -143,10 +143,10 @@ export function followUserApi(id) {
  * 获取我的文章
  */
 export function getMyArticleApi(params) {
-    return request({
-        url: '/protal/user/myArticle',
-        method: 'get',
-        params
+    return Promise.resolve({
+        code: 200,
+        message: 'success',
+        data: { records: [], total: 0 }
     })
 }
 

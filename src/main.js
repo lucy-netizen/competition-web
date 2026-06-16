@@ -5,6 +5,8 @@ import store from './store'
 import gsap from 'gsap'
 import 'animate.css'
 import VueLazyload from 'vue-lazyload'
+// 新增：引入axios
+import axios from 'axios'
 
 import ScrollTrigger from 'gsap/ScrollTrigger'
 gsap.registerPlugin(ScrollTrigger)
@@ -69,8 +71,30 @@ import 'virtual:svg-icons-register'
 import SvgIcon from '@/components/SvgIcon/index.vue'
 Vue.component('svg-icon', SvgIcon)
 
+// ========== 核心新增：axios配置 & 全局挂载 ==========
+// 创建axios实例，和环境变量匹配
+const request = axios.create({
+  baseURL: import.meta.env.VITE_APP_BASE_API, // 对应.env里的/dev-api前缀
+  timeout: 15000 // 请求超时15秒
+})
+
+// 响应拦截：统一处理返回数据，直接返回后端的业务数据
+request.interceptors.response.use(
+    res => {
+      // 直接返回后端返回的data体，后续代码里直接用 res.code / res.data 即可
+      return res.data
+    },
+    err => {
+      return Promise.reject(err)
+    }
+)
+
+// 挂载到Vue原型，全局所有页面都能用 this.$http 调用接口
+Vue.prototype.$http = request
+
+// ========== 原有挂载代码保留 ==========
 new Vue({
   router,
   store,
   render: h => h(App)
-}).$mount('#app') 
+}).$mount('#app')

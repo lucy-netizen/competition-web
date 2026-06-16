@@ -148,7 +148,7 @@ export default {
 }
 
 .menu-item.active {
-  background-color: var(--primary-color, #1890ff);
+  background-color: var(--primary-color, #6F8FA8);
   color: #fff;
 }
 

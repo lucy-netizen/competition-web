@@ -1,5 +1,5 @@
 <template>
-  <header class="site-header" :class="{ 'header-hidden': !isHeaderVisible }">
+  <header class="site-header" :class="{ 'header-hidden': !isHeaderVisible, 'on-hero': isHeroHeader }">
     <nav class="navbar">
       <!-- 移动端菜单按钮 -->
       <button class="menu-btn" @click="handleOpenMobileMenu">
@@ -8,44 +8,44 @@
 
       <div class="nav-left">
         <router-link to="/" class="logo">
-          <img :src="$store.state.webSiteInfo.logo" :alt="$store.state.webSiteInfo.name">
-          <span class="logo-text">{{$store.state.webSiteInfo.name}}</span>
+          <img :src="$store.state.webSiteInfo.logo || '/images/pds.jpg'" :alt="$store.state.webSiteInfo.name || '大学生竞赛管理系统'">
+          <span class="logo-text">{{$store.state.webSiteInfo.name || '大学生竞赛管理系统'}}</span>
         </router-link>
       </div>
 
       <div class="nav-center">
-        <div 
-          v-for="item in filteredMenuItems" 
-          :key="item.path"
-          class="nav-item"
-          @mouseleave="handleMouseLeave"
+        <div
+            v-for="item in filteredMenuItems"
+            :key="item.name"
+            class="nav-item"
+            @mouseleave="handleMouseLeave"
         >
-          <router-link 
-            :to="item.path"
-            class="nav-link"
-            :class="{ 
+          <router-link
+              :to="item.path"
+              class="nav-link"
+              :class="{
               'has-dropdown': item.children,
               'active': isActive(item),
               [item.colorClass]: true
             }"
-            @mouseenter="handleMouseEnter(item)"
+              @mouseenter="handleMouseEnter(item)"
           >
             <i :class="item.icon"></i>
             {{ item.name }}
             <i v-if="item.children" class="fas fa-chevron-down dropdown-icon"></i>
           </router-link>
-          
-          <div v-if="item.children" 
+
+          <div v-if="item.children"
                class="dropdown-menu"
                :class="{ active: activeDropdown === item.name }"
           >
             <a
-              href="javascript:void(0)"
-              v-for="child in item.children"
-              :key="child.path"
-              class="dropdown-item"
-              :class="{ 'active': isChildActive(child) }"
-              @click="handleDropdownItemClick(child)"
+                href="javascript:void(0)"
+                v-for="child in item.children"
+                :key="`${item.name}-${child.name}`"
+                class="dropdown-item"
+                :class="{ 'active': isChildActive(child) }"
+                @click="handleDropdownItemClick(child)"
             >
               <i :class="child.icon"></i>
               {{ child.name }}
@@ -60,8 +60,8 @@
           <span class="search-text">搜索</span>
         </a>
 
-        <!-- 修改消息按钮的跳转路径 -->
-        <router-link to="/notifications" class="message-btn">
+        <!-- 消息按钮 适配竞赛系统路由 -->
+        <router-link to="/notification" class="message-btn">
           <i class="far fa-bell"></i>
           <span class="message-count" v-if="showBage()" />
         </router-link>
@@ -74,25 +74,34 @@
         <div class="user-info">
           <div v-if="$store.state.userInfo" class="user-section" @mouseleave="showDropdown = false">
             <div class="avatar" @mouseenter="showDropdown = true">
-              <el-avatar :src="$store.state.userInfo.avatar"  />
+              <el-avatar :src="safeAvatar"  />
             </div>
-            <!-- 用户下拉菜单 -->
+            <!-- 用户下拉菜单 适配竞赛系统角色 -->
             <div class="user-dropdown" v-show="showDropdown">
               <div class="dropdown-header">
-                <img :src="$store.state.userInfo.avatar" :alt="$store.state.userInfo.nickname">
+                <img :src="safeAvatar" :alt="$store.state.userInfo.nickname || $store.state.userInfo.realName">
                 <div class="user-details">
-                  <span class="username">{{ $store.state.userInfo.nickname }}</span>
-                  <span class="role">{{ $store.state.userInfo.role === 'admin' ? '管理员' : '普通用户' }}</span>
+                  <span class="username">{{ $store.state.userInfo.nickname || $store.state.userInfo.realName || $store.state.userInfo.username }}</span>
+                  <span class="role">{{ getRoleText($store.state.userInfo.role) }}</span>
                 </div>
               </div>
               <div class="dropdown-divider"></div>
               <router-link to="/user/profile" class="dropdown-item">
-                <i class="fas fa-user"></i>
-                个人中心
+                <i class="fas fa-columns"></i>
+                角色工作台
               </router-link>
-              <router-link to="/data/publish" class="dropdown-item">
-                <i class="fas fa-database"></i>
-                科学数据发布
+              <router-link to="/submission" class="dropdown-item">
+                <i class="fas fa-upload"></i>
+                我的提交记录
+              </router-link>
+              <!-- 管理员专属入口 -->
+              <router-link to="/analytics" class="dropdown-item" v-if="isAdminRole($store.state.userInfo.role)">
+                <i class="fas fa-chart-line"></i>
+                数据分析驾驶舱
+              </router-link>
+              <router-link to="/admin/competition" class="dropdown-item" v-if="isAdminRole($store.state.userInfo.role)">
+                <i class="fas fa-cog"></i>
+                管理后台
               </router-link>
               <div class="dropdown-item" @click="handleLogout">
                 <i class="fas fa-sign-out-alt"></i>
@@ -102,7 +111,7 @@
           </div>
           <div v-else class="avatar" @click="handleLogin">
             <el-avatar class="avatar-icon"
-              :src="$store.state.webSiteInfo.touristAvatar" 
+                       :src="$store.state.webSiteInfo.touristAvatar || '/images/visible.jpg'"
             />
           </div>
         </div>
@@ -112,7 +121,6 @@
 </template>
 
 <script>
-
 export default {
   name: 'TheHeader',
   data() {
@@ -122,107 +130,89 @@ export default {
       showMobileSearch: false,
       lastScrollTop: 0,
       isHeaderVisible: true,
+      // 竞赛管理系统专属菜单 完全匹配路由配置
       menuItems: [
-        { 
-          name: '首页', 
-          path: '/', 
+        {
+          name: '赛事大厅',
+          path: '/',
           icon: 'fas fa-home',
           colorClass: 'home-link'
         },
-        { 
-          name: '文章归档', 
-          path: '/archives', 
-          icon: 'fas fa-archive',
-          colorClass: 'archive-link',
+        {
+          name: '赛事管理',
+          path: '/',
+          icon: 'fas fa-trophy',
+          colorClass: 'hot-link',
           children: [
-            { 
-              name: '归档', 
-              path: '/archive', 
-              icon: 'fas fa-clock',
-              colorClass: 'clock-link'
+            {
+              name: '赛事大厅',
+              path: '/',
+              icon: 'fas fa-home',
+              colorClass: 'home-link'
             },
-            { 
-              name: '分类', 
-              path: '/categories', 
-              icon: 'fas fa-folder',
-              colorClass: 'category-link'
+            {
+              name: '我的团队',
+              path: '/team',
+              icon: 'fas fa-users',
+              colorClass: 'friend-link'
             },
-            { 
-              name: '标签', 
-              path: '/tags', 
-              icon: 'fas fa-tags',
-              colorClass: 'tag-link'
+            {
+              name: '我的项目',
+              path: '/project',
+              icon: 'fas fa-project-diagram',
+              colorClass: 'code-link'
+            },
+            {
+              name: '提交记录',
+              path: '/submission',
+              icon: 'fas fa-upload',
+              colorClass: 'about-me-link'
             }
           ]
         },
-        { 
-          name: '说说', 
-          path: '/moments', 
-          icon: 'fas fa-comment-dots',
-          colorClass: 'talk-link'
-        },
-        { 
-          name: '热搜', 
-          path: '/hotSearch', 
-          icon: 'fas fa-fire',
-          colorClass: 'hot-link'
-        },
-        { 
-          name: '基础设施',
-          path: '/infrastructure',
-          icon: 'fas fa-cloud-download-alt',
-          colorClass: 'resource-link'
-        },
-        { 
-          name: '相册', 
-          path: '/photos', 
-          icon: 'fas fa-images',
-          colorClass: 'photos-link'
-        },
-        { 
-          name: '留言板', 
-          path: '/messages', 
-          icon: 'fas fa-envelope',
+        {
+          name: '备赛资源',
+          path: '/resource',
+          icon: 'fas fa-book-open',
           colorClass: 'message-link'
         },
-        { 
-          name: '友情链接', 
-          path: '/friends', 
-          icon: 'fas fa-users',
-          colorClass: 'friend-link'
+        {
+          name: '智能备赛',
+          path: '/ai-chat',
+          icon: 'fas fa-robot',
+          colorClass: 'talk-link'
         },
-        { 
-          name: '关于本站', 
-          path: '/about', 
+        {
+          name: '获奖公示',
+          path: '/award',
+          icon: 'fas fa-medal',
+          colorClass: 'photos-link'
+        },
+        {
+          name: '关于系统',
+          path: '/about',
           icon: 'fas fa-info-circle',
           colorClass: 'about-link',
           children: [
             {
-              name: '关于我们',
-              path: 'https://pds.wh.sdu.edu.cn/gywm/sdxxkxtd.htm',
-              icon: 'fas fa-images',
-              colorClass: 'photos-link',
-              external: true
-            },
-            { 
-              name: '关于我', 
-              path: '/about', 
-              icon: 'fas fa-user',
+              name: '系统介绍',
+              path: '/about',
+              icon: 'fas fa-info',
               colorClass: 'about-me-link'
             },
-            { 
-              name: '网站源码', 
-              path: 'https://gitee.com/quequnlong', 
+            {
+              name: '网站源码',
+              path: 'https://gitee.com/quequnlong',
               icon: 'fab fa-github',
               colorClass: 'github-link',
-              external: true 
+              external: true
             },
-            { 
-              name: '后台管理', 
-              path: import.meta.env.VITE_APP_ADMIN_URL || 'http://localhost:3000',
+            {
+              name: '后台管理',
+              path: import.meta.env.VITE_APP_ADMIN_URL || 'http://localhost:8800',
               icon: 'fas fa-tv',
               colorClass: 'admin-link',
-              external: true 
+              external: true
             }
           ]
         }
@@ -231,17 +221,141 @@ export default {
       showDropdown: false,
       showSearch: false,
       unreadCount: 0,
+      scrollTop: 0,
+      heroHeaderLimit: 640,
+      documentClickHandler: null,
     }
   },
   computed: {
     filteredMenuItems() {
-      return this.menuItems.map(item => ({
+      return this.roleMenuItems.map(item => ({
         ...item,
         path: item.children ? item.children[0].path : item.path
       }))
+    },
+    roleMenuItems() {
+      const role = this.$store.state.userInfo?.role
+      const baseItems = [
+        {
+          name: '赛事大厅',
+          path: '/',
+          icon: 'fas fa-home',
+          colorClass: 'home-link'
+        }
+      ]
+
+      if (this.isTeacherRole(role)) {
+        return [
+          ...baseItems,
+          {
+            name: '指导工作台',
+            path: '/user/profile',
+            icon: 'fas fa-chalkboard-teacher',
+            colorClass: 'hot-link'
+          },
+          {
+            name: '赛事发布',
+            path: '/admin/competition',
+            icon: 'fas fa-calendar-plus',
+            colorClass: 'message-link'
+          },
+          {
+            name: '团队审核',
+            path: '/team',
+            icon: 'fas fa-user-check',
+            colorClass: 'friend-link'
+          },
+          {
+            name: '作品评审',
+            path: '/admin/review',
+            icon: 'fas fa-clipboard-check',
+            colorClass: 'talk-link'
+          },
+          {
+            name: '获奖录入',
+            path: '/award',
+            icon: 'fas fa-medal',
+            colorClass: 'photos-link'
+          }
+        ]
+      }
+
+      if (this.isAdminRole(role)) {
+        return [
+          ...baseItems,
+          {
+            name: '统筹工作台',
+            path: '/user/profile',
+            icon: 'fas fa-chart-pie',
+            colorClass: 'hot-link'
+          },
+          {
+            name: '数据分析',
+            path: '/analytics',
+            icon: 'fas fa-chart-line',
+            colorClass: 'message-link'
+          },
+          {
+            name: '赛事审核',
+            path: '/admin/competition',
+            icon: 'fas fa-check-double',
+            colorClass: 'friend-link'
+          },
+          {
+            name: '全量数据',
+            path: '/project',
+            icon: 'fas fa-database',
+            colorClass: 'code-link'
+          },
+          {
+            name: '报表归档',
+            path: '/admin/review',
+            icon: 'fas fa-file-export',
+            colorClass: 'talk-link'
+          },
+          {
+            name: '账号管理',
+            path: '/admin/user',
+            icon: 'fas fa-user-cog',
+            colorClass: 'about-link'
+          }
+        ]
+      }
+
+      return this.menuItems
+    },
+    isHeroHeader() {
+      return this.$route.path === '/' && this.scrollTop < this.heroHeaderLimit
+    },
+    safeAvatar() {
+      const avatar = this.$store.state.userInfo?.avatar
+      if (!avatar || /127\.0\.0\.1:8800|localhost:8800/.test(avatar)) {
+        return '/images/visible.jpg'
+      }
+      return avatar
     }
   },
   methods: {
+    // 竞赛系统角色文本映射
+    getRoleText(role) {
+      const roleMap = {
+        'student': '学生',
+        'teacher': '指导老师',
+        'department_admin': '院系管理员',
+        'super_admin': '超级管理员',
+        'admin': '管理员',
+        '学生': '学生',
+        '教师': '指导老师',
+        '管理员': '管理员'
+      }
+      return roleMap[role] || '普通用户'
+    },
+    isTeacherRole(role) {
+      return ['teacher', '教师'].includes(role)
+    },
+    isAdminRole(role) {
+      return ['admin', '管理员', 'super_admin', 'department_admin'].includes(role)
+    },
     handleOpenMobileMenu() {
       this.$store.commit('SET_MOBILE_MENU_VISIBLE', true)
     },
@@ -249,7 +363,6 @@ export default {
       this.$store.commit('SET_SEARCH_VISIBLE', true)
     },
     handleLogin() {
-      // 处理登录逻辑
       this.$router.push('/login')
     },
     closeAllPanels() {
@@ -273,10 +386,8 @@ export default {
     },
     isActive(item) {
       if (item.children) {
-        // 如果子菜单，检查是否有子菜单项被激活
         return item.children.some(child => this.isChildActive(child))
       }
-      // 精确匹配路由路径
       return this.$route.path === item.path
     },
     isChildActive(child) {
@@ -296,47 +407,50 @@ export default {
       this.showDropdown = false
     },
     showBage() {
-      console.log(this.$store.state.isUnread)
-     return this.$store.state.isUnread
+      return this.$store.state.isUnread
+    },
+    updateHeroHeaderLimit() {
+      const viewportHeight = window.innerHeight || 720
+      this.heroHeaderLimit = Math.max(420, viewportHeight - 120)
     },
     handleScroll() {
       const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop
-      
-      // 如果滚动位置小于 100px，始终显示 header
+      this.scrollTop = currentScrollTop
+
       if (currentScrollTop < 100) {
         this.isHeaderVisible = true
         this.lastScrollTop = currentScrollTop
         return
       }
 
-      // 判断滚动方向
       if (currentScrollTop > this.lastScrollTop) {
-        // 向下滚动
         this.isHeaderVisible = false
       } else {
-        // 向上滚动
         this.isHeaderVisible = true
       }
-      
+
       this.lastScrollTop = currentScrollTop
     },
   },
   mounted() {
-    // 添加滚动事件监听
+    this.updateHeroHeaderLimit()
+    this.handleScroll()
     window.addEventListener('scroll', this.handleScroll)
-    
-    // 保留原有的事件监听
-    document.addEventListener('click', (e) => {
+    window.addEventListener('resize', this.updateHeroHeaderLimit)
+    this.documentClickHandler = (e) => {
       const userSection = this.$el.querySelector('.user-section')
       if (userSection && !userSection.contains(e.target)) {
         this.showDropdown = false
       }
-    })
+    }
+    document.addEventListener('click', this.documentClickHandler)
   },
   beforeDestroy() {
-    // 移除滚动事件监听
     window.removeEventListener('scroll', this.handleScroll)
-    document.removeEventListener('click', this.closeDropdown)
+    window.removeEventListener('resize', this.updateHeroHeaderLimit)
+    if (this.documentClickHandler) {
+      document.removeEventListener('click', this.documentClickHandler)
+    }
   }
 }
 </script>
@@ -348,10 +462,10 @@ export default {
   left: 0;
   right: 0;
   z-index: 1000;
-  background: rgba(var(--surface-rgb), 0.65);
-  backdrop-filter: blur(10px) saturate(180%);
-  -webkit-backdrop-filter: blur(10px) saturate(180%);
-  border-bottom: 1px solid rgba(var(--border-color-rgb), 0.08);
+  background: rgba(245, 245, 240, 0.86);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border-bottom: 2px solid #1E1E1E;
   transition: all 0.3s ease;
   transform: translateY(0);
 
@@ -364,21 +478,52 @@ export default {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(
-      to bottom,
-      rgba(var(--surface-rgb), 0.05),
-      rgba(var(--surface-rgb), 0)
-    );
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), rgba(245, 245, 240, 0));
     pointer-events: none;
+  }
+
+  &.on-hero {
+    background: rgba(245, 245, 240, 0.82);
+    border-bottom-color: #1E1E1E;
+
+    &::after {
+      background: linear-gradient(to bottom, rgba(255, 255, 255, 0.28), rgba(245, 245, 240, 0));
+    }
+
+    .nav-left .logo .logo-text,
+    .nav-link,
+    .message-btn,
+    .menu-btn,
+    .mobile-search-btn {
+      color: #1A1A1A;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+      color: #1A1A1A;
+      background: #F2D160;
+    }
+
+    .search-btn {
+      background: #FFFFFF;
+      border-color: #1E1E1E;
+      color: #1A1A1A;
+    }
+
+    .user-info .avatar {
+      border-color: #1E1E1E;
+    }
   }
 }
 
 .navbar {
-  padding: $spacing-sm $spacing-xl;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 8px 32px;
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  height: 64px;
+  height: 76px;
   position: relative;
 }
 
@@ -388,20 +533,22 @@ export default {
     display: flex;
     align-items: center;
     text-decoration: none;
-    gap: $spacing-sm;
+    gap: 10px;
 
     img {
-      height: 38px;
-      width: 40px;
-      border-radius: 5px;
+      height: 42px;
+      width: 42px;
+      border: 2px solid #1E1E1E;
+      border-radius: 50%;
+      box-shadow: 4px 4px 0 rgba(26, 26, 26, 0.08);
     }
 
     .logo-text {
-      font-size: 1.2em;
+      font-size: 1.08em;
       font-weight: 700;
-      background: linear-gradient(135deg, $primary, $secondary);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: #1A1A1A;
+      background: none;
+      -webkit-text-fill-color: currentColor;
       max-width: 200px;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -447,7 +594,7 @@ export default {
         transform: translateX(-50%) translateY(0);
         pointer-events: auto;
       }
-      
+
       .nav-link .dropdown-icon {
         transform: rotate(180deg);
       }
@@ -455,16 +602,17 @@ export default {
   }
 
   .nav-link {
-    color: var(--text-secondary);
+    color: #1A1A1A;
     text-decoration: none;
-    font-weight: 500;
-    transition: all 0.3s ease;
+    font-weight: 700;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     gap: $spacing-sm;
-    padding: $spacing-sm;
-    border-radius: $border-radius-md;
-    font-size: 0.95em;
+    padding: 8px 13px;
+    border: 2px solid transparent;
+    border-radius: 9999px;
+    font-size: 0.88em;
     position: relative;
     height: 40px;
     white-space: nowrap;
@@ -476,8 +624,10 @@ export default {
     }
 
     &:hover, &.active {
-      color: $primary;
-      // background: var(--hover-bg);
+      color: #1A1A1A;
+      background: #FFFFFF;
+      border-color: #1E1E1E;
+      box-shadow: 4px 4px 0 rgba(26, 26, 26, 0.08);
     }
 
     &.has-dropdown {
@@ -530,7 +680,7 @@ export default {
 
   @media screen and (max-width: 1200px) {
     gap: $spacing-sm;
-    
+
     .nav-link {
       font-size: 0.8em;
       padding: $spacing-xs $spacing-sm;
@@ -550,7 +700,7 @@ export default {
       i {
         display: none;
       }
-      
+
       padding: $spacing-xs $spacing-xs;
       font-size: 0.75em;
     }
@@ -564,36 +714,38 @@ export default {
   margin-left: auto;
   position: relative;
   right: 0px;
-  
+
   .search-btn {
     display: flex;
     align-items: center;
     gap: 8px;
+    min-width: 108px;
     padding: 8px 16px;
-    background: var(--hover-bg);
-    border-radius: 20px;
-    color: var(--text-secondary);
+    background: #FFFFFF;
+    border-radius: 9999px;
+    color: #1A1A1A;
     text-decoration: none;
-    transition: all 0.3s ease;
-    border: 1px solid var(--border-color);
-    
+    transition: all 0.2s ease;
+    border: 2px solid #1E1E1E;
+    box-shadow: 4px 4px 0 rgba(26, 26, 26, 0.08);
+
     i {
       font-size: 0.9em;
       transition: transform 0.3s ease;
     }
-    
+
     .search-text {
       font-size: 0.9em;
       font-weight: 500;
     }
-    
+
     &:hover {
-      background: var(--surface);
-      color: $primary;
-      border-color: $primary;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba($primary, 0.1);
-      
+      background: #F2D160;
+      color: #1A1A1A;
+      border-color: #1E1E1E;
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0 rgba(26, 26, 26, 0.08);
+
       i {
         transform: scale(1.1);
       }
@@ -605,30 +757,30 @@ export default {
     display: flex;
     align-items: center;
     padding: 8px;
-    color: var(--text-secondary);
+    color: #1A1A1A;
     text-decoration: none;
     transition: all 0.3s ease;
     border-radius: 50%;
-    
+
     i {
       font-size: 1.2em;
       transition: transform 0.3s ease;
     }
-    
+
     &:hover {
-      color: $primary;
-      background: var(--hover-bg);
-      
+      color: #1A1A1A;
+      background: #C4D94E;
+
       i {
         transform: scale(1.1);
       }
     }
-    
+
     .message-count {
       position: absolute;
       top: 2px;
       right: 2px;
-      background: red;
+      background: #d8a39a;
       width: 8px;
       height: 8px;
       border-radius: 50%;
@@ -662,11 +814,12 @@ export default {
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 2px solid $primary;
+      border: 2px solid #1E1E1E;
+      box-shadow: 4px 4px 0 rgba(26, 26, 26, 0.08);
 
       &:hover {
-        transform: scale(1.05);
-        background: var(--hover-bg);
+        transform: translate(-2px, -2px);
+        background: #C5B5E0;
       }
 
       .avatar-icon {
@@ -799,7 +952,7 @@ export default {
 
 @include responsive(md) {
   .navbar {
-    padding: $spacing-sm $spacing-md;
+    padding: 8px 18px;
   }
 
   .menu-btn,
@@ -817,13 +970,13 @@ export default {
     left: 50%;
     transform: translateX(-50%);
     margin-right: 0;
-    
+
     .logo {
       img {
         height: 40px;
         width: 42px;
       }
-      
+
       .logo-text {
         max-width: 160px;
         font-size: 1em;
@@ -873,7 +1026,7 @@ export default {
     height: 8px;
     background: transparent;
   }
-  
+
   .dropdown-item {
     display: flex;
     align-items: center;
@@ -896,7 +1049,7 @@ export default {
     &:hover {
       color: $primary;
       background: var(--hover-bg);
-      
+
       i {
         color: $primary;
       }
@@ -937,7 +1090,7 @@ export default {
   }
 }
 
-/* 色模式适配 */
+/* 深色模式适配 */
 :root[data-theme='dark'] {
   .site-header {
     background: rgba(var(--surface-rgb), 0.75);
@@ -960,7 +1113,7 @@ export default {
   }
 }
 
-/* 深色模式下的图标颜色整 */
+/* 深色模式图标颜色适配 */
 :root[data-theme='dark'] {
   .nav-link {
     &.home-link i { color: #81C784; }
@@ -980,7 +1133,7 @@ export default {
   }
 }
 
-/* 添加图标悬浮动画 */
+/* 图标悬浮动画 */
 @keyframes iconFloat {
   0% {
     transform: translateY(0);
@@ -997,19 +1150,16 @@ export default {
   animation: iconFloat 0.6s ease-in-out;
 }
 
-/* 修改字体相关样式 */
+/* 字体样式 */
 .nav-link {
   font-family: 'Poppins', sans-serif;
   font-weight: 500;
-  letter-spacing: 0.2px;
-  /* ... 其他样式保持不变 ... */
+  letter-spacing: 0;
 }
 
 .logo-text {
   font-family: 'Poppins', sans-serif;
   font-weight: 600;
-  letter-spacing: -0.5px;
-  /* ... 其他样式保持不变 ... */
+  letter-spacing: 0;
 }
-
-</style> 
+</style>
